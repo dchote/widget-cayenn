@@ -125,6 +125,8 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", /* other de
             // Define a key:value pair here as strings to document what signals you subscribe to
             // that are owned by foreign/other widgets.
             // '/com-chilipeppr-elem-dragdrop/ondropped': 'Example: We subscribe to this signal at a higher priority to intercept the signal. We do not let it propagate by returning false.'
+        
+            '/com-chilipeppr-widget-serialport/onAnnounce': 'We subscribe to this signal so we can hear about announcements of devices from SPJS.'
         },
         /**
          * All widgets should have an init method. It should be run by the
@@ -135,9 +137,23 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", /* other de
 
             this.setupUiFromLocalStorage();
             this.btnSetup();
+            
+            this.setupOnAnnounceSubscribe();
+            
+            this.activatePopovers();
+            
             this.forkSetup();
 
             console.log("I am done being initted.");
+        },
+        setupOnAnnounceSubscribe: function() {
+            chilipeppr.subscribe("/com-chilipeppr-widget-serialport/onAnnounce", this, this.onAnnounce.bind(this));    
+        },
+        onAnnounce: function(payload) {
+            console.log("Cayenn - got onAnnounce. payload:", payload);    
+        },
+        activatePopovers: function() {
+            $('#' + this.id + ' .cayenn-icon').popover({html: true});    
         },
         /**
          * Call this method from init to setup all the buttons when this widget
