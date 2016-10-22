@@ -68,8 +68,29 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
 
     // init my widget
     myWidget.init();
-    $('#' + myWidget.id).css('margin', '20px');
+    // $('#' + myWidget.id).css('margin', '20px
+    $('body').css('padding', '20px');
     $('title').html(myWidget.name);
+    
+    // Inject new div to contain widget or use an existing div with an ID
+    $("body").append('<' + 'div id="myDivWidgetSerialport"><' + '/div>');
+    
+    chilipeppr.load(
+      "#myDivWidgetSerialport",
+      "http://raw.githubusercontent.com/chilipeppr/widget-spjs/master/auto-generated-widget.html",
+      function() {
+        // Callback after widget loaded into #myDivWidgetSerialport
+        // Now use require.js to get reference to instantiated widget
+        cprequire(
+          ["inline:com-chilipeppr-widget-serialport"], // the id you gave your widget
+          function(myObjWidgetSerialport) {
+            // Callback that is passed reference to the newly loaded widget
+            console.log("Widget / Serial Port JSON Server just got loaded.", myObjWidgetSerialport);
+            myObjWidgetSerialport.init();
+          }
+        );
+      }
+    );
 
 } /*end_test*/ );
 
