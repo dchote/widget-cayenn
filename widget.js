@@ -27,10 +27,16 @@ requirejs.config({
         // Example of how to define the key (you make up the key) and the URL
         // Make sure you DO NOT put the .js at the end of the URL
         // SmoothieCharts: '//smoothiecharts.org/smoothie',
+        // Three: '//i2dcui.appspot.com/geturl?url=http://threejs.org/build/three.js',
+        Three: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r76/three',
+        ThreeTrackballControls: '//i2dcui.appspot.com/slingshot?url=http://rawgit.com/mrdoob/three.js/r77/examples/js/controls/TrackballControls.js',
+        
     },
     shim: {
         // See require.js docs for how to define dependencies that
         // should be loaded before your script/widget.
+        ThreeTrackballControls: ['Three'],
+        
     }
 });
 
@@ -75,6 +81,7 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
     // Inject new div to contain widget or use an existing div with an ID
     $("body").append('<' + 'div id="myDivWidgetSerialport"><' + '/div>');
     
+    /*
     chilipeppr.load(
       "#myDivWidgetSerialport",
       "http://raw.githubusercontent.com/chilipeppr/widget-spjs/master/auto-generated-widget.html",
@@ -87,15 +94,18 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
             // Callback that is passed reference to the newly loaded widget
             console.log("Widget / Serial Port JSON Server just got loaded.", myObjWidgetSerialport);
             myObjWidgetSerialport.init();
+            myObjWidgetSerialport.consoleToggle();
           }
         );
       }
     );
+    */
 
 } /*end_test*/ );
 
 // This is the main definition of your widget. Give it a unique name.
-cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", /* other dependencies here */ ], function() {
+cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "ThreeTrackballControls" /* other dependencies here */ ], function() {
+    // THREE.TrackballControls = ThreeTrackballControls;
     return {
         /**
          * The ID of the widget. You must define this and make it unique.
@@ -161,11 +171,236 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", /* other de
             
             this.setupOnAnnounceSubscribe();
             
-            this.activatePopovers();
             
-            this.forkSetup();
+            
+            // this.activatePopovers();
+            
+            // this.forkSetup();
+            
+            this.init3d();
 
             console.log("I am done being initted.");
+        },
+        loader: null,
+        camera: null,
+        scene: null,
+        renderer: null,
+        controls: null,
+        init3d: function() {
+            
+            console.log("cayenn - initting 3d viewer")
+            this.loader = new THREE.ObjectLoader();
+            this.renderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            this.renderer.setClearColor(0xeeeeee);
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+            // cast shadows
+            this.renderer.shadowMap.enabled = true;
+            // to antialias the shadow
+            this.renderer.shadowMapSoft = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            var renderDivEl = $('#' + this.id + " #cayenn-renderarea");
+            
+            this.camera = this.loader.parse(this.threeObj.camera);
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+			this.camera.updateProjectionMatrix();
+// 			this.camera.setViewOffset(renderDivEl.width())
+            // this.camera.setViewOffset(this.width * 3, this.height, this.width * 1.4, 0, this.width, this.height);
+            // this.camera.rotationAutoUpdate = true;
+            
+            this.scene = this.loader.parse(this.threeObj.scene);
+            // this.scene.up.set(0,0,1);
+            
+            // rotate the MainGroup object to correct z orientation
+            var mainGrp = this.scene.getObjectByName( "MainGroup" );
+            mainGrp.rotation.x = 90 * Math.PI / 180;
+            
+            // slide the object down on z so that it's center is not the bottom
+            // so pivoting in mini 3d viewer makes more sense
+            // also, turn on shadows
+            // var group = new THREE.Group();
+            // var that = this;
+            /*
+            for (var ctr in this.scene.children) {
+            // this.scene.traverse(function(obj) {
+                var obj = this.scene.children[ctr];
+                console.log("obj:", obj);
+                if (obj.type == "AmbientLight") return;
+                obj.castShadow = true;
+                obj.receiveShadow = true;
+                
+                if (obj.name == "Scene") return;
+                
+                // group.add(obj);
+                // this.scene.remove(obj);
+                // obj.up.set(0,0,1);
+                // var tempZ = obj.position.z;
+                // obj.position.z = obj.position.y;
+                // obj.position.y = tempZ;
+                // obj.position.z += -20;
+                console.log("traversed scene to obj:", obj);
+            };
+            */
+
+            // group.children = this.scene.children;
+            // this.scene.children = []; // wipe objects cuz moved to group
+            // group.rotateX(90 * Math.PI / 180);
+            // group.scale.set(10,1,1);
+            // group.rotation.x = 90 * Math.PI / 180;
+            // var axis = new THREE.Vector3(1,0,0);//tilted a bit on x and y - feel free to plug your different axis here
+            //in your update/draw function
+            // var rad = 90 * Math.PI / 180;;
+            // group.rotateOnAxis(axis,rad);
+            // group.updateMatrixWorld();
+            // this.scene.add(group); 
+            
+            var axisHelper = new THREE.AxisHelper( 50 );
+            // axisHelper.scale.set(10,10,10);
+            // axisHelper.rotation.x = 90 * Math.PI / 180;
+            console.log("axisHelper:", axisHelper);
+            this.scene.add( axisHelper );
+
+            var size = 100;
+            var step = 10;
+            
+            var gridHelper = new THREE.GridHelper( size, step, 0x0000ff, 0x808080 );
+            gridHelper.rotation.x = 90 * Math.PI / 180;
+            gridHelper.material.opacity = 0.15;
+            gridHelper.material.transparent = true;
+            this.scene.add( gridHelper );
+            
+            /*
+            // group.position.z = -42.5;
+            
+            group.updateMatrixWorld();
+            // group.matrixWorldNeedsUpdate = true;
+            // this.scene.matrixWorldNeedsUpdate = true;
+            this.scene.updateMatrixWorld();
+            */
+            
+            // move all objects down
+
+            $(window).resize(this.onResize.bind(this));
+            
+            // attach to div area in HTML DOM
+            var that = this;
+            // setTimeout(function() {
+                
+                
+                renderDivEl.append(that.renderer.domElement);
+                // that.renderer.setSize(renderDivEl.width()/2 -25, renderDivEl.height()/2);
+                // that.renderer.setSize(renderDivEl.width()/that.renderer.getPixelRatio(), renderDivEl.height()/that.renderer.getPixelRatio());
+                that.renderer.setSize(renderDivEl.innerWidth(), renderDivEl.innerHeight());
+                console.log("renderer size:", that.renderer.getSize());
+                console.log("pixelRatio:", that.renderer.getPixelRatio());
+                that.renderer.render(that.scene, that.camera);
+    
+                // Controls
+                that.controls = new THREE.TrackballControls(that.camera, renderDivEl[0]);
+                // that.controls = new THREE.TrackballControls(that.camera);
+                that.controls.noPan = false;
+                that.controls.noZoom = false;
+                that.controls.dynamicDampingFactor = 0.99; //0.15;
+                that.controls.rotateSpeed = 2.0;
+                that.controls.zoomSpeed = 3.2;
+				that.controls.panSpeed = 0.8;
+				that.controls.staticMoving = true;
+				// that.controls.target.set(0,0,-93);
+				// this.camera.up = new THREE.Vector3(0,0,1);
+                // this.camera.lookAt(new THREE.Vector3(0,0,43));
+                // that.controls.target = new THREE.Vector3(0,0,43);
+                //that.controls.target = new THREE.Vector3().addVectors(/*new line for readability*/
+                //    new THREE.Vector3(0,0,-43), that.scene.children[0].getWorldDirection());
+				that.controls.update();
+				that.controls.reset();
+				
+				
+				
+				console.log("controls:", that.controls);
+                renderDivEl[0].addEventListener( 'mousemove', that.onMouseOrTouch.bind(that) );
+                renderDivEl[0].addEventListener( 'touchmove', that.onMouseOrTouch.bind(that) );
+                renderDivEl[0].addEventListener('scroll', that.onScroll.bind(that) );
+                renderDivEl[0].addEventListener("mousewheel", that.onScroll.bind(that) );
+                renderDivEl[0].addEventListener("DOMMouseScroll", that.onScroll.bind(that) );
+                // that.controls.addEventListener( 'start',
+                that.controls.addEventListener( 'change', that.render.bind(that) );
+                // that.controls.addEventListener( 'change', that.onMouseOrTouch.bind(that) );
+                // $(window).trigger('resize');
+                // setTimeout(that.render.bind(that), 100);
+                that.render();
+                
+                this.viewExtents();
+                $('#' + this.id + " .cayenn-viewextents").click(this.viewExtents.bind(this));
+                
+                // force window resize cuz we get artifacts
+                setTimeout(function() {
+                    $(window).trigger('resize');
+                }, 200);
+            
+            // }, 50);
+            
+            // setTimeout(function() {
+                
+            // }, 1000);
+            
+            /*
+            // init the threejs stuff
+            this.width = $('#com-chilipeppr-widget-touchplate .panel-body').width();
+            this.height = 210;
+
+            this.load(this.threeObj);
+            //this.setSize( window.innerWidth, window.innerHeight );
+            console.log("scene width:", this.width, "height:", this.height);
+            this.setSize(this.width, this.height);
+            //this.setSize( 140, 200);
+            //this.scene.position.setX(width * -0.045);
+            //this.play();
+            $('#com-chilipeppr-widget-touchplate .panel-body').prepend(this.dom);
+            $(window).resize(this.onresize.bind(this));
+            //this.animate();
+            */
+            console.log("cayenn - done initting 3d view. renderer:", this.renderer, "scene:", this.scene);
+        },
+        viewExtents: function() {
+            // use viewextents from 3d viewer
+			var camera = this.controls.object;
+            // camera.fov = 35; // 35mm
+			// camera.focus = 0;
+            // camera.aspect = 3.8;
+            camera.up.set(0,0,1);
+			camera.position.set(0,-100,100);
+			var bbox = new THREE.BoundingBoxHelper( this.scene.getObjectByName("MainGroup"), 0xff0000 );
+            bbox.update();
+            // this.scene.add( bbox );
+            console.log("bbox:", bbox);
+			console.log("center of bbox:", bbox.box.center());
+			var target = new THREE.Vector3(0,0,bbox.box.center().z);
+			this.controls.target = target;
+			// camera.updateProjectionMatrix();
+			this.controls.update();
+			console.log("trackball camera after tweak:", camera);
+			this.render();    
+        },
+        onScroll: function(evt) {
+            // console.log("got onscroll. evt:", evt);
+            this.controls.update();
+        },
+        onMouseOrTouch: function(evt) {
+            // console.log("got mouse or touch. evt:", evt);
+            this.controls.update();
+            // this.renderer.render(this.scene, this.camera);
+        },
+        render: function(evt) {
+            this.renderer.render(this.scene, this.camera);
+        },
+        onResize: function(evt) {
+            var renderDivEl = $('#' + this.id + " #cayenn-renderarea");
+            this.renderer.setSize(renderDivEl.innerWidth(), renderDivEl.innerHeight());
+            this.camera.aspect = renderDivEl.innerWidth() / renderDivEl.innerHeight(); //window.innerWidth / window.innerHeight;
+			this.camera.updateProjectionMatrix();
+            this.render();
         },
         setupOnAnnounceSubscribe: function() {
             chilipeppr.subscribe("/com-chilipeppr-widget-serialport/onAnnounce", this, this.onAnnounce.bind(this));    
@@ -383,6 +618,381 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", /* other de
             });
 
         },
+        threeObj: {
+        	"metadata": {
+        		"type": "App"
+        	},
+        	"project": {
+        		"gammaInput": false,
+        		"gammaOutput": false,
+        		"shadows": true,
+        		"editable": false,
+        		"vr": false
+        	},
+        	"camera": {
+        		"metadata": {
+        			"version": 4.4,
+        			"type": "Object",
+        			"generator": "Object3D.toJSON"
+        		},
+        		"object": {
+        			"uuid": "A4EAC104-A843-45D6-8F9B-B812565158B5",
+        			"type": "PerspectiveCamera",
+        			"name": "Camera",
+        			"matrix": [1,0,0,0,0,0.9945219159126282,0.10452846437692642,0,0,-0.10452846437692642,0.9945219159126282,0,0,35.914920806884766,119.48490905761719,1],
+		            "fov": 50,
+        			"zoom": 1,
+        			"near": 0.1,
+        			"far": 10000,
+        			"focus": 10,
+        			"aspect": 1.5364916773367479,
+        			"filmGauge": 35,
+        			"filmOffset": 0
+        		}
+        	},
+        	"scene": {
+        		"metadata": {
+        			"version": 4.4,
+        			"type": "Object",
+        			"generator": "Object3D.toJSON"
+        		},
+        		"geometries": [
+        			{
+        				"uuid": "313D2FCE-B597-4976-9400-1E9B5156C5BA",
+        				"type": "CylinderBufferGeometry",
+        				"radiusTop": 0.4,
+        				"radiusBottom": 0.4,
+        				"height": 13,
+        				"radialSegments": 10,
+        				"heightSegments": 1,
+        				"openEnded": false
+        			},
+        			{
+        				"uuid": "C7B8C792-9617-4163-A285-AF2382C7D1B5",
+        				"type": "CylinderBufferGeometry",
+        				"radiusTop": 1.8,
+        				"radiusBottom": 1.8,
+        				"height": 5,
+        				"radialSegments": 10,
+        				"heightSegments": 1,
+        				"openEnded": false
+        			},
+        			{
+        				"uuid": "F47A3C33-18D1-4F59-8BD1-A085116BEB8A",
+        				"type": "CylinderBufferGeometry",
+        				"radiusTop": 2.8,
+        				"radiusBottom": 1.8,
+        				"height": 1.5,
+        				"radialSegments": 10,
+        				"heightSegments": 1,
+        				"openEnded": false
+        			},
+        			{
+        				"uuid": "45D91260-B761-4D93-AB4B-F8661A1F3CC7",
+        				"type": "CylinderBufferGeometry",
+        				"radiusTop": 2.8,
+        				"radiusBottom": 2.8,
+        				"height": 6,
+        				"radialSegments": 10,
+        				"heightSegments": 1,
+        				"openEnded": false
+        			},
+        			{
+        				"uuid": "C7F991DC-3BD0-4815-BE27-ECA6D44FB8F3",
+        				"type": "CylinderBufferGeometry",
+        				"radiusTop": 5.6,
+        				"radiusBottom": 5.6,
+        				"height": 10,
+        				"radialSegments": 12,
+        				"heightSegments": 1,
+        				"openEnded": false
+        			},
+        			{
+        				"uuid": "19093760-74AC-4C48-B2C3-50D494273B6D",
+        				"type": "CylinderBufferGeometry",
+        				"radiusTop": 2.8,
+        				"radiusBottom": 2.8,
+        				"height": 4.5,
+        				"radialSegments": 10,
+        				"heightSegments": 1,
+        				"openEnded": false
+        			},
+        			{
+        				"uuid": "BDA81259-0540-4230-873B-B912715F74E5",
+        				"type": "BoxBufferGeometry",
+        				"width": 21,
+        				"height": 58,
+        				"depth": 16,
+        				"widthSegments": 0,
+        				"heightSegments": 0,
+        				"depthSegments": 0
+        			},
+        			{
+        				"uuid": "69146E85-23AC-44C7-A8DA-58DE4BB47C44",
+        				"type": "CylinderBufferGeometry",
+        				"radiusTop": 14,
+        				"radiusBottom": 14,
+        				"height": 19,
+        				"radialSegments": 10,
+        				"heightSegments": 1,
+        				"openEnded": false
+        			},
+        			{
+        				"uuid": "B2BFDDBA-D165-4463-9380-FF46827CDDA0",
+        				"type": "BoxBufferGeometry",
+        				"width": 19,
+        				"height": 93,
+        				"depth": 16,
+        				"widthSegments": 0,
+        				"heightSegments": 0,
+        				"depthSegments": 0
+        			}],
+        		"materials": [
+        			{
+        				"uuid": "41B1EB73-49F9-4B3E-8DAA-AD120E076A73",
+        				"type": "MeshStandardMaterial",
+        				"color": 16777215,
+        				"roughness": 0.5,
+        				"metalness": 0.5,
+        				"emissive": 13185238,
+        				"depthFunc": 3,
+        				"depthTest": true,
+        				"depthWrite": true,
+        				"skinning": false,
+        				"morphTargets": false
+        			},
+        			{
+        				"uuid": "8CF283D4-3448-410D-B548-C52B3F7551DC",
+        				"type": "MeshStandardMaterial",
+        				"color": 16777215,
+        				"roughness": 0.5,
+        				"metalness": 0.5,
+        				"emissive": 10461087,
+        				"depthFunc": 3,
+        				"depthTest": true,
+        				"depthWrite": true,
+        				"skinning": false,
+        				"morphTargets": false
+        			},
+        			{
+        				"uuid": "34E5426C-3D5E-4042-8173-489B2ED66FC3",
+        				"type": "MeshStandardMaterial",
+        				"color": 16777215,
+        				"roughness": 0.5,
+        				"metalness": 0.5,
+        				"emissive": 2039785,
+        				"depthFunc": 3,
+        				"depthTest": true,
+        				"depthWrite": true,
+        				"skinning": false,
+        				"morphTargets": false
+        			},
+        			{
+        				"uuid": "75869065-DAD9-46E7-8CD4-CF2DF94C2022",
+        				"type": "MeshStandardMaterial",
+        				"color": 9211020,
+        				"roughness": 0.5,
+        				"metalness": 0.5,
+        				"emissive": 0,
+        				"depthFunc": 3,
+        				"depthTest": true,
+        				"depthWrite": true,
+        				"skinning": false,
+        				"morphTargets": false
+        			},
+        			{
+        				"uuid": "D7575A61-E2ED-4853-A4D2-E14934C837CA",
+        				"type": "MeshStandardMaterial",
+        				"color": 16777215,
+        				"roughness": 0,
+        				"metalness": 0.5,
+        				"emissive": 14803425,
+        				"opacity": 0.58,
+        				"transparent": true,
+        				"depthFunc": 3,
+        				"depthTest": true,
+        				"depthWrite": true,
+        				"skinning": false,
+        				"morphTargets": false
+        			},
+        			{
+        				"uuid": "9F71FC81-3D7E-4AA4-9954-FA83B163B57D",
+        				"type": "MeshStandardMaterial",
+        				"color": 8026746,
+        				"roughness": 0.5,
+        				"metalness": 0.5,
+        				"emissive": 7895160,
+        				"depthFunc": 3,
+        				"depthTest": true,
+        				"depthWrite": true,
+        				"skinning": false,
+        				"morphTargets": false
+        			},
+        			{
+        				"uuid": "09ED9CF0-A53B-4C69-87BA-16CA57922E40",
+        				"type": "MeshStandardMaterial",
+        				"color": 16777215,
+        				"roughness": 0.5,
+        				"metalness": 0.5,
+        				"emissive": 4144959,
+        				"depthFunc": 3,
+        				"depthTest": true,
+        				"depthWrite": true,
+        				"skinning": false,
+        				"morphTargets": false
+        			}],
+        		"object": {
+        			"uuid": "456CE677-ABE0-41B0-9CCE-D794EB9272FD",
+        			"type": "Scene",
+        			"name": "Scene",
+        			"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+        			"children": [
+        			    {
+        			        "uuid": "123",
+        			        "type": "Group",
+        			        "name": "MainGroup",
+        			        "children": [
+        			            {
+                					"uuid": "5DDD2887-0191-44A3-9B83-F0B8733C6F74",
+                					"type": "Mesh",
+                					"name": "Needle",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,6.5,0,1],
+                					"geometry": "313D2FCE-B597-4976-9400-1E9B5156C5BA",
+                					"material": "41B1EB73-49F9-4B3E-8DAA-AD120E076A73"
+                				},
+                				{
+                					"uuid": "C3E9EB5E-96BF-4738-B4F9-9C4BF20AE166",
+                					"type": "Mesh",
+                					"name": "Holder",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,13,0,1],
+                					"geometry": "C7B8C792-9617-4163-A285-AF2382C7D1B5",
+                					"material": "8CF283D4-3448-410D-B548-C52B3F7551DC"
+                				},
+                				{
+                					"uuid": "8E5DA9B1-24E6-4E50-AB3F-C702686FD7EF",
+                					"type": "Mesh",
+                					"name": "HolderExpand",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,16,0,1],
+                					"geometry": "F47A3C33-18D1-4F59-8BD1-A085116BEB8A",
+                					"material": "8CF283D4-3448-410D-B548-C52B3F7551DC"
+                				},
+                				{
+                					"uuid": "92D579DD-0FC2-4207-A054-E2761B4BCF39",
+                					"type": "Mesh",
+                					"name": "HolderTop",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,19.5,0,1],
+                					"geometry": "45D91260-B761-4D93-AB4B-F8661A1F3CC7",
+                					"material": "8CF283D4-3448-410D-B548-C52B3F7551DC"
+                				},
+                				{
+                					"uuid": "31D2B2E5-1457-432F-92EF-764CA2224BD1",
+                					"type": "Mesh",
+                					"name": "DMPLuer",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,27.5,0,1],
+                					"geometry": "C7F991DC-3BD0-4815-BE27-ECA6D44FB8F3",
+                					"material": "34E5426C-3D5E-4042-8173-489B2ED66FC3"
+                				},
+                				{
+                					"uuid": "78D63247-9442-4655-9946-A091F6009637",
+                					"type": "SpotLight",
+                					"name": "SpotLight 1",
+                					"castShadow": true,
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,38.75918197631836,74.2023696899414,8.573958396911621,1],
+                					"color": 16777215,
+                					"intensity": 1,
+                					"distance": 0,
+                					"angle": 0.3141592653589793,
+                					"decay": 1,
+                					"penumbra": 0,
+                					"shadow": {
+                						"camera": {
+                							"uuid": "AD0BC814-EEFE-41C2-A122-C1D166D74623",
+                							"type": "PerspectiveCamera",
+                							"fov": 36,
+                							"zoom": 1,
+                							"near": 0.5,
+                							"far": 500,
+                							"focus": 10,
+                							"aspect": 1,
+                							"filmGauge": 35,
+                							"filmOffset": 0
+                						}
+                					}
+                				},
+                				{
+                					"uuid": "F4B51BDA-4934-436C-B516-B933DF1DABF2",
+                					"type": "AmbientLight",
+                					"name": "AmbientLight 2",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+                					"color": 16777062,
+                					"intensity": 0.48
+                				},
+                				{
+                					"uuid": "F10C10C4-E75A-4687-AEA8-99E2EFBB8961",
+                					"type": "Mesh",
+                					"name": "DMPPipe",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,34.5,0,1],
+                					"geometry": "19093760-74AC-4C48-B2C3-50D494273B6D",
+                					"material": "75869065-DAD9-46E7-8CD4-CF2DF94C2022"
+                				},
+                				{
+                					"uuid": "FA110EF3-2EBF-4111-93DE-0F474389BD48",
+                					"type": "Mesh",
+                					"name": "AugerBox",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,2.401460886001587,65.5,0,1],
+                					"geometry": "BDA81259-0540-4230-873B-B912715F74E5",
+                					"material": "D7575A61-E2ED-4853-A4D2-E14934C837CA"
+                				},
+                				{
+                					"uuid": "EF2F4793-BAF4-4FDD-B678-D49ED47003D9",
+                					"type": "SpotLight",
+                					"name": "SpotLight 6",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,227.60926818847656,236.91976928710938,189.99232482910156,1],
+                					"color": 12435686,
+                					"intensity": 0.4,
+                					"distance": 0,
+                					"angle": 0.3141592653589793,
+                					"decay": 1,
+                					"penumbra": 0,
+                					"shadow": {
+                						"camera": {
+                							"uuid": "D64984DC-5938-4AED-9C0E-E10D8D09BEC5",
+                							"type": "PerspectiveCamera",
+                							"fov": 50,
+                							"zoom": 1,
+                							"near": 0.5,
+                							"far": 500,
+                							"focus": 10,
+                							"aspect": 1,
+                							"filmGauge": 35,
+                							"filmOffset": 0
+                						}
+                					}
+                				},
+                				{
+                					"uuid": "509B7D44-6540-4394-9BE6-75BC63D3D71C",
+                					"type": "Mesh",
+                					"name": "Motor",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,7.445764064788818,69.98239135742188,0,1],
+                					"geometry": "69146E85-23AC-44C7-A8DA-58DE4BB47C44",
+                					"material": "9F71FC81-3D7E-4AA4-9954-FA83B163B57D"
+                				},
+                				{
+                					"uuid": "C4D1E40F-D2EC-48B4-9F9D-88F64A66B10B",
+                					"type": "Mesh",
+                					"name": "Box 6",
+                					"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,-19.51814079284668,46.5,0,1],
+                					"geometry": "B2BFDDBA-D165-4463-9380-FF46827CDDA0",
+                					"material": "09ED9CF0-A53B-4C69-87BA-16CA57922E40"
+                				}
+        			            ]
+        			    }
+        				],
+        			"background": 11184810
+        		}
+        	},
+        	"scripts": {}
+        }
 
     }
 });
