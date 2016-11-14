@@ -81,7 +81,7 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
     // Inject new div to contain widget or use an existing div with an ID
     $("body").append('<' + 'div id="myDivWidgetSerialport"><' + '/div>');
     
-    /*
+    
     chilipeppr.load(
       "#myDivWidgetSerialport",
       "http://raw.githubusercontent.com/chilipeppr/widget-spjs/master/auto-generated-widget.html",
@@ -99,7 +99,7 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
         );
       }
     );
-    */
+    
 
 } /*end_test*/ );
 
@@ -171,9 +171,14 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             this.setupOnAnnounceSubscribe();
             
+            var that = this;
+            setTimeout(function() {
+                that.sendRefreshCmd();
+            }, 2000);
             
+            this.setupRefreshBtn();
             
-            // this.activatePopovers();
+            this.activatePopovers();
             
             // this.forkSetup();
             
@@ -181,6 +186,241 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
 
             console.log("I am done being initted.");
         },
+        
+        iconsClear: function() {
+            $('#' + this.id + ' .cayenn-icons').html("");
+        },
+        iconGet: function(device) {
+            
+            var name = "Unnamed";
+            if ('Tag' in device && 'Name' in device.Tag) {
+                name = device.Tag.Name;
+            }
+            
+            var iconHtml = `
+            <div class="cayenn-icon" style="" data-delay="1000" data-animation="true" data-placement="auto" data-container="body" data-trigger="hover" 
+                data-title="` + name + `" 
+                data-content='` + // <table class="table table-condensed table-striped">
+                    // <tr><th>Gcode</th><th>Description</th></tr>
+                    // <tr><td>Maps to A axis</td><td>Linear slide. Max 0mm. Min -72mm.</td></tr>
+                    // <tr><td>Maps to A axis</td><td>Auger. Unlimited degrees.</td></tr>
+                    // </table>
+                    '';
+                    
+            if ('Tag' in device && 'Desc' in device.Tag) {   
+                iconHtml += '<p>' + device.Tag.Desc + '</p>';
+            }
+            
+            if ('Addr' in device && 'IP' in device.Addr) {
+                iconHtml += '<p style="font-size:10px;margin-bottom:0;">IP: ' + device.Addr.IP + ':8988 UDP/TCP</p>';
+            }
+                    
+            iconHtml += "'>\n";
+            
+            if ('Tag' in device && 'Icon' in device.Tag) {
+                iconHtml += '<div class="cayenn-deviceimg" style="border:0px solid blue;background-image:url(\'' +
+                device.Tag.Icon + '\');" ></div>';
+            }
+            
+            iconHtml += `
+                <div class="cayenn-name">
+                    ` + name + `
+                </div>
+            </div>
+            `;
+            return iconHtml;
+        },
+        setupRefreshBtn: function() {
+            var btn = $('#' + this.id + ' .btn-refresh');
+            btn.click(this.sendRefreshCmd.bind(this));
+            this.iconsClear();
+        },
+        sendRefreshCmd: function() {
+            console.log("sendRefreshCmd");
+            var that = this;
+            this.getSubnetBroadcast(function(ip) {
+                console.log("got subnet broadcast. ip:", ip);
+                var cmd = "cayenn-sendudp " + ip.subnet + ' {"Cayenn":"Discover"}\n';
+                chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
+                
+            });
+            
+            // make sure we are on the icon list
+            this.showIconList();
+            
+        },
+        getSubnetBroadcast: function(callback) {
+            var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;   //compatibility for firefox and chrome
+            var pc = new RTCPeerConnection({iceServers:[]}), noop = function(){};      
+            pc.createDataChannel("");    //create a bogus data channel
+            pc.createOffer(pc.setLocalDescription.bind(pc), noop);    // create offer and set local description
+            pc.onicecandidate = function(ice){  //listen for candidate events
+                if(!ice || !ice.candidate || !ice.candidate.candidate)  return;
+                var myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/.exec(ice.candidate.candidate)[1];
+                console.log('my IP: ', myIP);
+                var subnet = myIP.replace(/\d+$/, "255");
+                console.log("my IP subnet:", subnet);
+                pc.onicecandidate = noop;
+                callback({ip:myIP,subnet:subnet});
+            };    
+        },
+        setupOnAnnounceSubscribe: function() {
+            chilipeppr.subscribe("/com-chilipeppr-widget-serialport/onAnnounce", this, this.onAnnounce.bind(this));    
+        },
+        cayennDevices: {},
+        cayennDeviceIdShowing: null,
+        onAnnounce: function(payload) {
+            console.log("Cayenn - got onAnnounce. payload:", payload);
+            
+            // We can get these callbacks for
+            // 1) General announcements of "i-am-a-client"
+            // 2) Responses to commands
+            
+            // see if this is response to command
+            if ('Tag' in payload && 'Response' in payload.Tag) {
+                // this is response to command request
+                
+                if (payload.Tag.Response == "GetCmds") {
+                    
+                    // this is a list of commands for a specific device.
+                    // see if this is the device that's showing, otherwise ignore it
+                    if (this.cayennDeviceIdShowing == payload.DeviceId) {
+                        // yes, this is for the showing device
+                        this.updateCmdsForDevice(payload);
+                    }
+                }
+                
+            } else {
+                // this is response to Discover command
+
+                // see if we already have this in our list
+                if (payload.DeviceId in this.cayennDevices) {
+                    console.log("device already exists in memory.");
+                
+                } else {
+                    console.log("looks like new device");
+                    
+                    // store device in global
+                    this.cayennDevices[payload.DeviceId] = payload;
+                    
+                    // create icon
+                    var iconHtml = this.iconGet(payload);
+                    var iconEl = $(iconHtml);
+                    iconEl.popover({html:true});
+                    iconEl.click({DeviceId:payload.DeviceId}, this.showOneDevice.bind(this));
+                    $('#' + this.id + ' .cayenn-icons').append(iconEl);
+                }
+                
+                
+
+            }
+            
+            
+        },
+        sendCmd: function(deviceid, maincmd, subcmd) {
+            // here we send a command and store a history of it in the log
+            var cmd = maincmd + " " + subcmd;
+            if (! cmd.endsWith("\n")) cmd += "\n";
+            console.log("sending command for deviceid:", deviceid, " cmd:", cmd);
+            chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
+            
+            // see if history of log
+            var device = this.cayennDevices[deviceid];
+            if (!('log' in device)) device.log = [];
+            
+            var entry = {ts:new Date(), maincmd: maincmd, subcmd: subcmd, dir:"out"};
+            
+            device.log.unshift(entry);
+            
+            // if view for this device is showing, shove it in log view
+            if (this.cayennDeviceIdShowing == deviceid) {
+                var logEl = $('#' + this.id + ' .cayenn-log');
+                var entryEl = $('<tr><td>> ' + entry.ts.toLocaleTimeString() + '</td><td>' + subcmd + '</td></tr>');
+                logEl.prepend(entryEl);
+            }
+        },
+        updateCmdsForDevice: function(payload) {
+            // we get this call when we get back a list of commands from the device
+            console.log("updateCmdsForDevice. payload:", payload);
+            
+            // check we have good data
+            if ('Tag' in payload && 'Response' in payload.Tag && 'Cmds' in payload.Tag) {
+                
+                // tag looks good. populate cmd list
+                var el = $('#' + this.id + ' .cayenn-onedevice');
+                var cmdListEl = el.find('.cayenn-cmdlist');
+                cmdListEl.html("");
+                for (var i = 0; i < payload.Tag.Cmds.length; i++) {
+                    var cmd = payload.Tag.Cmds[i];
+                    var htmlEl = $('<button class="btn btn-xs btn-default">' + cmd + '</button>');
+                    cmdListEl.append(htmlEl);
+                }
+            
+            } else {
+                console.error("Does not look like we got a good Tag list for response to GetCmds. payload:", payload);
+            }
+
+        },
+        showOneDevice: function(evt) {
+            
+            console.log("showing one device. evt.data:", evt.data);
+            
+            // what device are we dealing with
+            var device = this.cayennDevices[evt.data.DeviceId];
+            
+            // set this as the active showing device
+            this.cayennDeviceIdShowing = device.DeviceId;
+            
+            // hide the icon list, show the single device
+            $('#' + this.id + ' .cayenn-icon-list').addClass('hidden');
+            
+            var el = $('#' + this.id + ' .cayenn-onedevice');
+            
+            // swap in the icon
+            var iconHtml = this.iconGet(device);
+            var iconEl = $(iconHtml);
+            // console.log("swapping in icon:", iconHtml);
+            el.find('.cayenn-icon').parent().html(iconHtml); //.replaceWith(iconEl);
+            
+            // add click evt to back button
+            // make sure old events are removed
+            el.find(".cayenn-backbtn").off( "click" ).click(this.showIconList.bind(this));
+            el.find('.cayenn-icon').off( "click" ).click(this.showIconList.bind(this));
+            
+            // wipe old cmds
+            el.find('.cayenn-cmdlist').html("(Asking device...)");
+            
+            // show it
+            el.removeClass('hidden');
+            
+            // now ask the device to give us its commands
+            var maincmd = "cayenn-sendtcp " + device.Addr.IP;
+            var subcmd = '{"Cmd":"GetCmds"}';
+            this.sendCmd(device.DeviceId, maincmd, subcmd);
+            // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
+            
+            // ask for queue list (may not have one)
+            subcmd = '{"Cmd":"GetQ"}';
+            this.sendCmd(device.DeviceId, maincmd, subcmd);
+            // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
+            
+        },
+        showIconList: function() {
+            
+            console.log("showing icon list");
+            
+            // hide others
+            this.cayennDeviceIdShowing = null;
+            
+            // hide the icon list, show the single device
+            $('#' + this.id + ' .cayenn-onedevice').addClass('hidden');
+            $('#' + this.id + ' #cayenn-renderarea').addClass('hidden');
+
+            // show the icon list, show the single device
+            $('#' + this.id + ' .cayenn-icon-list').removeClass('hidden');
+        },
+
+        /* 3D Related Methods Below */
         loader: null,
         camera: null,
         scene: null,
@@ -401,12 +641,6 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             this.camera.aspect = renderDivEl.innerWidth() / renderDivEl.innerHeight(); //window.innerWidth / window.innerHeight;
 			this.camera.updateProjectionMatrix();
             this.render();
-        },
-        setupOnAnnounceSubscribe: function() {
-            chilipeppr.subscribe("/com-chilipeppr-widget-serialport/onAnnounce", this, this.onAnnounce.bind(this));    
-        },
-        onAnnounce: function(payload) {
-            console.log("Cayenn - got onAnnounce. payload:", payload);    
         },
         activatePopovers: function() {
             $('#' + this.id + ' .cayenn-icon').popover({html: true});    

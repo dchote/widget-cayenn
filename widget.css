@@ -9,9 +9,16 @@
 }
 
 #com-chilipeppr-widget-cayenn .panel-body {
-    padding:8px 14px;
+    /*padding:8px 14px;*/
+    padding:0;
+    height:200px;
+    position:relative;
+    overflow:hidden;
 }
 
+.cayenn-icon-list {
+    padding: 0 0 0 15px;
+}
 .cayenn-icon {
     width:100px;
     margin:15px 15px 0px 0px;
@@ -47,4 +54,28 @@
     overflow: visible;
     position: relative;
     text-shadow: 0 0 1px #fff, 0 0 3px #fff, 0 0 6px #fff, 0 0 10px #fff, 0 0 15px #000;
+}
+.cayenn-icon-small {
+    zoom:0.5;
+    padding:0;
+    margin:0 16px 0 0;
+}
+
+.cayenn-icon-small .cayenn-icon {
+    margin:0;
+}
+.cayenn-cmdlist .btn {
+    margin-right:2px;
+    margin-bottom: 2px;
+}
+.cayenn-entercmd {
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+}
+.cayenn-onedevice {
+    overflow: auto;
+    height: 165px;
+    padding: 10px;
 }

@@ -56,11 +56,13 @@
             </div> <span class="panel-title" data-toggle="popover">Cayenn Devices</span> <span style="font-size:9px;" class="fb-build">v1</span>
 
         </div>
-        <div class="panel-body" style="height:200px;position:relative;overflow:hidden;">
+        <div class="panel-body" style="">
             
             <!-- Main View Area of Icons -->
+            <div class="cayenn-icon-list">
+                
             <!-- Nav tabs -->
-            <ul class="nav nav-tabs" role="tablist">
+            <ul class="nav nav-tabs hidden" role="tablist">
                 <li class="active"><a href="#com-chilipeppr-widget-cayenn-tabActive" role="tab" data-toggle="tab">Active</a>
                 </li>
                 <li><a href="#com-chilipeppr-widget-cayenn-tabInactive" role="tab" data-toggle="tab">Inactive</a></li>
@@ -119,47 +121,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="cayenn-onedevice hidden">
-                        
-                        
-                        <table class="hidden" style="border:0px solid blue;margin-top:10px;width:100%;height:100%;"><tr valign="top"><td>
-                        <div class="cayenn-icon" style="zoom:0.7;padding:0;margin:0 16px 0 0;" data-delay="1000" data-animation="true" data-placement="auto" data-container="body" data-trigger="hover" 
-                            data-title="DispenserPaste" 
-                            data-content='<table class="table table-condensed table-striped">
-                                <tr><th>Gcode</th><th>Description</th></tr>
-                                <tr><td>Maps to A axis</td><td>Linear slide. Max 0mm. Min -72mm.</td></tr>
-                                <tr><td>Maps to A axis</td><td>Auger. Unlimited degrees.</td></tr>
-                                </table>
-                                <p>Techcon DMP-10 auger with stepper and linear slide</p>
-                                <p style="font-size:10px;margin-bottom:0;">IP: 192.168.1.24:8988 UDP/TCP</p>
-                                '>
-                            <div class="cayenn-deviceimg" style="background-image:url('http://gds-storage-prd.s3.amazonaws.com/fusion-360/161021/1972/70f0aa71/thumbnails/raasrendering-bbf3b3d5-01c5-48e4-bbdb-f81727a520ab-160-160.jpg');" ></div>
-                            <div class="cayenn-name">
-                                DispenserPaste
-                            </div>
-                        </div>
-                        </td><td style="border:0px solid green;width:100%;height:150px;margin:0;padding:0;">
-                        
-                            <table xvalign="top" style="width:100%;height:100%;" class="hidden table table-condensed table-striped">
-                                <tr><td colspan="2">
-                                    <button class="btn btn-xs btn-default">ResetCtr</button>
-                                    <button class="btn btn-xs btn-default">GetCmds</button>
-                                    <button class="btn btn-xs btn-default">GetQ</button>
-                                    <button class="btn btn-xs btn-default">WipeQ</button>
-                                </td></tr>
-                                <tr><td>0</td><td>{"Cmd":"LinearSlideOn"}</td></tr>
-                                <tr><td>1</td><td>{"Cmd":"AirOn"}</td></tr>
-                                <tr><td>2</td><td>{"Cmd":"AugerOn","Speed":5}</td></tr>
-                                <tr><td>3</td><td>{"Cmd":"AugerOff"}</td></tr>
-                                <tr><td>4</td><td>{"Cmd":"AirOff"}</td></tr>
-                                <tr><td>5</td><td>{"Cmd":"LinearSlideOff"}</td></tr>
-                            </table>
-                            
-                            
-                        
-                        </td></tr></table>
-                        
-                    </div>
+                    
                 </div>
 
                 <!-- Tab 2 -->
@@ -173,6 +135,91 @@
                 </div>
 
             </div>
+            
+            </div>
+            <!-- End Icon List -->
+            
+            <!-- Single Device View -->
+            <div class="cayenn-onedevice hidden" data-deviceid="chip:16446372-flash:1458400-mac:18:fe:34:fa:f3:a4">
+                
+                <table class="" style="border:0px solid blue;margin-top:0px;width:100%;height:100%;"><tr valign="top"><td>
+                
+                <div class="cayenn-icon-small">
+                <div class="cayenn-icon " style="" data-delay="1000" data-animation="true" data-placement="auto" data-container="body" data-trigger="hover" 
+                    data-title="DispenserPaste" 
+                    data-content='<table class="table table-condensed table-striped">
+                        <tr><th>Gcode</th><th>Description</th></tr>
+                        <tr><td>Maps to A axis</td><td>Linear slide. Max 0mm. Min -72mm.</td></tr>
+                        <tr><td>Maps to A axis</td><td>Auger. Unlimited degrees.</td></tr>
+                        </table>
+                        <p>Techcon DMP-10 auger with stepper and linear slide</p>
+                        <p style="font-size:10px;margin-bottom:0;">IP: 192.168.1.24:8988 UDP/TCP</p>
+                        '>
+                    <div class="cayenn-deviceimg" style="background-image:url('http://gds-storage-prd.s3.amazonaws.com/fusion-360/161021/1972/70f0aa71/thumbnails/raasrendering-bbf3b3d5-01c5-48e4-bbdb-f81727a520ab-160-160.jpg');" ></div>
+                    <div class="cayenn-name">
+                        DispenserPaste
+                    </div>
+                </div>
+                </div>
+                
+                </td><td style="border:0px solid green;width:100%;height:150px;margin:0;padding:0;overflow:auto;">
+                
+                    <!-- Per Device Nav tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="active">
+                            <a href="#cayenn-onedevice-tabCmds" role="tab" data-toggle="tab">Commands</a>
+                        </li>
+                        <li>
+                            <a href="#cayenn-onedevice-tabLog" role="tab" data-toggle="tab">Log</a>
+                        </li>
+                        <li>
+                            <a href="#cayenn-onedevice-tabQ" role="tab" data-toggle="tab">Queue</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- Per Device Tab panes -->
+                    <div class="tab-content">
+            
+                        <!-- Per Device. Tab Comands -->
+                        <div class="tab-pane active" id="cayenn-onedevice-tabCmds">
+                            <div class="cayenn-cmdlist" style="margin-top:6px;">
+                                <button class="btn btn-xs btn-default">ResetCtr</button>
+                                <button class="btn btn-xs btn-default">GetCmds</button>
+                                <button class="btn btn-xs btn-default">GetQ</button>
+                                <button class="btn btn-xs btn-default">WipeQ</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="cayenn-onedevice-tabLog">
+                            <table xvalign="top" style="font-size:10px;margin-top:10px" class="cayenn-log table table-condensed table-striped">
+                                <tr><td>> 3:13 PM</td><td>{"Cmd":"GetQ"}</td></tr>
+                                <tr><td>< 3:13 PM</td><td>{"Announce":"i-am-a-client"}</td></tr>
+                                <tr><td>> 3:13 PM</td><td>{"Cmd":"GetCmds"}</td></tr>
+                            </table>
+                        </div>
+                        <div class="tab-pane" id="cayenn-onedevice-tabQ">
+                            <table xvalign="top" style="width:100%;xheight:100%;margin-top:10px" class="cayenn-qlist table table-condensed table-striped">
+                                <tr><th colspan="2" class="">
+                                    Queue List (Asking device...)
+                                </th></tr>
+                                <tr><td>0</td><td>{"Cmd":"LinearSlideOn"}</td></tr>
+                                <tr><td>1</td><td>{"Cmd":"AirOn"}</td></tr>
+                                <tr><td>2</td><td>{"Cmd":"AugerOn","Speed":5}</td></tr>
+                                <tr><td>3</td><td>{"Cmd":"AugerOff"}</td></tr>
+                                <tr><td>4</td><td>{"Cmd":"AirOff"}</td></tr>
+                                <tr><td>5</td><td>{"Cmd":"LinearSlideOff"}</td></tr>
+                            </table>
+                        </div>
+
+                </td></tr></table>
+                
+                <button style="position:absolute;top:2px;left:2px;" type="button" class="btn btn-xs btn-default cayenn-backbtn" data-container="body" data-toggle="popover" data-placement="auto" data-content="Go back to main menu" data-trigger="hover" data-delay="1000" data-original-title="" title=""> 
+                    <span class="glyphicon glyphicon-arrow-left"></span>
+                </button>
+                
+                <!-- Textbox at bottom for commands -->
+                <input type="text" class="form-control cayenn-entercmd" placeholder="Enter Cayenn Command">
+                
+            </div>
 
             <!-- 3D View -->
             <div id="cayenn-renderarea" class="hidden" style="border:0px solid red;position:absolute;left:0;top:0;bottom:0;right:0;">
@@ -183,8 +230,10 @@
                     <span class="glyphicon glyphicon-arrow-left"></span>
                 </button>
             </div>
-
+            
+            
         </div>
+    
     </div>
 </body>
 
