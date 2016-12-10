@@ -173,7 +173,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             var that = this;
             setTimeout(function() {
-                that.sendRefreshCmd();
+                // that.sendRefreshCmd();
             }, 2000);
             
             this.setupRefreshBtn();
@@ -214,6 +214,13 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             if ('Addr' in device && 'IP' in device.Addr) {
                 iconHtml += '<p style="font-size:10px;margin-bottom:0;">IP: ' + device.Addr.IP + ':8988 UDP/TCP</p>';
             }
+            if ('DeviceId' in device) {
+                iconHtml += '<p style="font-size:10px;margin-bottom:0;">DeviceId: ' + device.DeviceId + '</p>';
+            }
+            
+            if ('Widget' in device) {
+                iconHtml += '<p style="font-size:10px;margin-bottom:0;">Widget: ' + device.Widget + '</p>';
+            }
                     
             iconHtml += "'>\n";
             
@@ -233,7 +240,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
         setupRefreshBtn: function() {
             var btn = $('#' + this.id + ' .btn-refresh');
             btn.click(this.sendRefreshCmd.bind(this));
-            this.iconsClear();
+            // this.iconsClear();
         },
         sendRefreshCmd: function() {
             console.log("sendRefreshCmd");
@@ -277,10 +284,13 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // 2) Responses to commands
             
             // see if this is response to command
-            if ('Tag' in payload && 'Response' in payload.Tag) {
+            if ('Tag' in payload && 'Resp' in payload.Tag) {
                 // this is response to command request
                 
-                if (payload.Tag.Response == "GetCmds") {
+                // we allow both formats of Response or the shorter Resp
+                // if ('Resp' in payload.Tag) payload.Tag.Response = payload.Tag.Resp;
+                
+                if (payload.Tag.Resp == "GetCmds") {
                     
                     // this is a list of commands for a specific device.
                     // see if this is the device that's showing, otherwise ignore it
@@ -288,6 +298,18 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                         // yes, this is for the showing device
                         this.updateCmdsForDevice(payload);
                     }
+                } else if (payload.Tag.Resp == "GetQ") {
+                    
+                    // device sent us their command queue, i.e. the queue that executes as
+                    // the Coolant counter goes up
+                    
+                    // this is a list of queue items for a specific device.
+                    // see if this is the device that's showing, otherwise ignore it
+                    if (this.cayennDeviceIdShowing == payload.DeviceId) {
+                        // yes, this is for the showing device
+                        this.updateQueueForDevice(payload);
+                    }
+                    
                 }
                 
             } else {
@@ -300,6 +322,13 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 } else {
                     console.log("looks like new device");
                     
+                    // see if first time creating icon, thus remove info text in main area
+                    if (Object.keys(this.cayennDevices).length == 0) {
+                        // yes, first icon seen
+                        // so wipe info in main area
+                        this.iconsClear();
+                    }
+                    
                     // store device in global
                     this.cayennDevices[payload.DeviceId] = payload;
                     
@@ -309,18 +338,25 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     iconEl.popover({html:true});
                     iconEl.click({DeviceId:payload.DeviceId}, this.showOneDevice.bind(this));
                     $('#' + this.id + ' .cayenn-icons').append(iconEl);
+                    
+                    
                 }
                 
                 
 
             }
             
+            // store this in the device log, and show it if the device log is showing
+            this.onIncomingCmd(payload.DeviceId, payload.JsonTag);
+            
             
         },
         sendCmd: function(deviceid, maincmd, subcmd) {
             // here we send a command and store a history of it in the log
             var cmd = maincmd + " " + subcmd;
-            if (! cmd.endsWith("\n")) cmd += "\n";
+            // remove newline
+            cmd = cmd.replace(/\n$/, "");
+            // if (! cmd.endsWith("\n")) cmd += "\n";
             console.log("sending command for deviceid:", deviceid, " cmd:", cmd);
             chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
             
@@ -339,12 +375,68 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 logEl.prepend(entryEl);
             }
         },
+        onIncomingCmd: function(deviceid, cmd) {
+            var entry = {ts:new Date(), subcmd: cmd, dir:"in"};
+            
+            var device = this.cayennDevices[deviceid];
+            if (!('log' in device)) device.log = [];
+            
+            device.log.unshift(entry);
+            
+            // if view for this device is showing, shove it in log view
+            if (this.cayennDeviceIdShowing == deviceid) {
+                var logEl = $('#' + this.id + ' .cayenn-log');
+                var entryEl = $('<tr><td>< ' + entry.ts.toLocaleTimeString() + '</td><td>' + cmd + '</td></tr>');
+                logEl.prepend(entryEl);
+            }
+        },
+        updateQueueForDevice: function(payload) {
+            // we get this call when we get back a list of queued commands from the device
+            console.log("updateQueueForDevice. payload:", payload);
+            
+            // check we have good data
+            // {"Queue":{},"Resp":"GetQ"}
+            // {"Queue":{"0":{"Cmd":"LaserBoot"}},"Resp":"GetQ"}
+            if ('Tag' in payload && 'Resp' in payload.Tag && 'Queue' in payload.Tag) {
+                
+                console.log("we have queue items folks");
+                
+                // tag looks good. populate cmd list
+                var el = $('#' + this.id + ' .cayenn-onedevice');
+                var qListEl = el.find('.cayenn-qlist');
+                
+                // wipe list
+                qListEl.html("");
+                
+                var keys = Object.keys(payload.Tag.Queue);
+                
+                if (keys.length == 0) {
+                    var htmlEl = $('<tr><td>' + "Queue is empty. " + new Date().toLocaleTimeString() + '</td></tr>');
+                    qListEl.append(htmlEl);
+                }
+                
+                
+                console.log("keys.length:", keys.length);
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    var q = payload.Tag.Queue[key];
+                    console.log("q:", q);
+                    var htmlEl = $('<tr><td>' + key + '</td><td>' + JSON.stringify(q) + '</td></tr>');
+                    // htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
+                    qListEl.append(htmlEl);
+                }
+            
+            } else {
+                console.error("Does not look like we got a good Tag list for response to GetCmds. payload:", payload);
+            }
+
+        },
         updateCmdsForDevice: function(payload) {
             // we get this call when we get back a list of commands from the device
             console.log("updateCmdsForDevice. payload:", payload);
             
             // check we have good data
-            if ('Tag' in payload && 'Response' in payload.Tag && 'Cmds' in payload.Tag) {
+            if ('Tag' in payload && 'Resp' in payload.Tag && 'Cmds' in payload.Tag) {
                 
                 // tag looks good. populate cmd list
                 var el = $('#' + this.id + ' .cayenn-onedevice');
@@ -353,6 +445,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 for (var i = 0; i < payload.Tag.Cmds.length; i++) {
                     var cmd = payload.Tag.Cmds[i];
                     var htmlEl = $('<button class="btn btn-xs btn-default">' + cmd + '</button>');
+                    htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
                     cmdListEl.append(htmlEl);
                 }
             
@@ -361,6 +454,70 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             }
 
         },
+        onCmdBtn: function(evt) {
+            
+            // see if the cmd has parentheses cuz that can't be used directly
+            var cmd = evt.data.Cmd;
+            
+            if (cmd == "CmdQ") {
+                // special command we know of so we handle it with parameters
+                var obj = {
+                    Cmd: "CmdQ",
+                    Id: 0,
+                    RunCmd: {
+                        Cmd: "(cmd-here)"
+                    }
+                }
+                console.log("obj:", obj);
+                var subcmd = JSON.stringify(obj);
+                console.log("subcmd:", subcmd);
+                
+                // place in text area
+                $('#' + this.id + ' .cayenn-entercmd').val(subcmd);
+                
+            } else if (cmd.match(/(.*){(.*)}/)) {
+                // place in text input area instead
+                console.log("need to place in text area. re:", RegExp.$1, RegExp.$2, "cmd:", cmd);
+                
+                var obj = {
+                    Cmd: RegExp.$1.trim(),
+                }
+                
+                // get elements inside json
+                var params = RegExp.$2;
+                console.log("params:", params);
+                // split params on comma
+                var p = params.split(/,/);
+                console.log("p:", p);
+                for (var i = 0; i < p.length; i++) {
+                    var item = p[i];
+                    obj[item] = 0;
+                }
+
+                // var obj = JSON.parse(json);
+                console.log("obj:", obj);
+                var subcmd = JSON.stringify(obj);
+                console.log("subcmd:", subcmd);
+                
+                // place in text area
+                $('#' + this.id + ' .cayenn-entercmd').val(subcmd);
+                
+            } else {
+                // var device = this.cayennDevices[evt.data.DeviceId];
+                var device = this.cayennDevices[this.cayennDeviceIdShowing];
+                var maincmd = "cayenn-sendtcp " + device.Addr.IP;
+                var subcmd = '{"Cmd":"' + cmd + '"}';
+                this.sendCmd(device.DeviceId, maincmd, subcmd);
+                
+                // do some special moves for certain commands
+                if (cmd == "GetQ") { 
+                    $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
+                } else if (cmd == "WipeQ") {
+                    $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Please run GetQ to refresh...</td></tr>");
+                }
+            }
+        },
+        
         showOneDevice: function(evt) {
             
             console.log("showing one device. evt.data:", evt.data);
@@ -390,6 +547,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // wipe old cmds
             el.find('.cayenn-cmdlist').html("(Asking device...)");
             
+            // wipe log area
+            el.find('.cayenn-log').html("");
+            
             // show it
             el.removeClass('hidden');
             
@@ -404,6 +564,63 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             this.sendCmd(device.DeviceId, maincmd, subcmd);
             // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
             
+            // wipe current queue list
+            $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
+            
+            // make buttons work in queue tab
+            var qEl = $('#' + this.id + ' .cayenn-qlist').parent();
+            qEl.find('.btn-ResetCtr').off('click').click({Cmd:"ResetCtr"}, this.onCmdBtn.bind(this));
+            // qEl.find('.btn-GetCmds').off('click').click({Cmd:"GetCmds"}, this.onCmdBtn.bind(this));
+            qEl.find('.btn-GetQ').off('click').click({Cmd:"GetQ"}, this.onCmdBtn.bind(this));
+            qEl.find('.btn-WipeQ').off('click').click({Cmd:"WipeQ"}, this.onCmdBtn.bind(this));
+            qEl.find('.btn-CmdQ').off('click').click({Cmd:"CmdQ"}, this.onCmdBtn.bind(this));
+
+            // make it so the enter key works on the text input
+            var inputEl = $('#' + this.id + ' .cayenn-entercmd');
+            var that = this;
+            inputEl.off( "keyup" ).keyup(this.onKeyUp.bind(this));
+            
+            
+            
+            this.activatePopovers();
+            
+        },
+        cmdHistory: [""],
+        cmdHistoryLastIndex: 0,
+        onKeyUp: function(evt) {
+            console.log("got keyup on input box. evt:", evt, "evt.which", evt.which);
+            console.log("cmdHistory:", this.cmdHistory, this.cmdHistoryLastIndex);
+            
+            var inputEl = $('#' + this.id + ' .cayenn-entercmd');
+            
+            if (evt.which == 13) {
+                // we need to send the content from the text area
+                var cmd = inputEl.val();
+                var d = this.cayennDevices[this.cayennDeviceIdShowing];
+                var maincmd = "cayenn-sendtcp " + d.Addr.IP;
+                this.sendCmd(this.cayennDeviceIdShowing, maincmd, cmd);
+                inputEl.val("");
+                
+                // push onto history
+                this.cmdHistory.unshift(cmd);
+                this.cmdHistoryLastIndex = 0; // reset to top
+                
+            } else if (evt.which == 38) {
+                // up arrow
+                inputEl.val(this.cmdHistory[this.cmdHistoryLastIndex]);
+                this.cmdHistoryLastIndex++;
+                if (this.cmdHistoryLastIndex > this.cmdHistory.length - 1) this.cmdHistoryLastIndex = this.cmdHistory.length - 1;
+            } else if (evt.which == 40) {
+                // down arrow
+                this.cmdHistoryLastIndex--;
+                if (this.cmdHistoryLastIndex < 0) {
+                    inputEl.val("");
+                    this.cmdHistoryLastIndex = 0;
+                } else {
+                    inputEl.val(this.cmdHistory[this.cmdHistoryLastIndex]);
+                }
+                
+            }
         },
         showIconList: function() {
             

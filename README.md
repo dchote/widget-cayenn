@@ -137,14 +137,14 @@ other widgets know how to subscribe to them and what they do.</td></tr><tr valig
 other widgets know how to subscribe to them and what they do.</td></tr><tr valign="top"><td>foreignPublish</td><td>object</td><td>Please see docs above.<br><br>Document the foreign publish signals, i.e. signals owned by other widgets
 or elements, that this widget/element publishes to.</td></tr><tr valign="top"><td>foreignSubscribe</td><td>object</td><td>Please see docs above.<br><br>Document the foreign subscribe signals, i.e. signals owned by other widgets
 or elements, that this widget/element subscribes to.</td></tr><tr valign="top"><td>init</td><td>function</td><td>function () <br><br>All widgets should have an init method. It should be run by the
-instantiating code like a workspace or a different widget.</td></tr><tr valign="top"><td>iconsClear</td><td>function</td><td>function () </td></tr><tr valign="top"><td>iconGet</td><td>function</td><td>function (device) </td></tr><tr valign="top"><td>setupRefreshBtn</td><td>function</td><td>function () </td></tr><tr valign="top"><td>sendRefreshCmd</td><td>function</td><td>function () </td></tr><tr valign="top"><td>getSubnetBroadcast</td><td>function</td><td>function (callback) </td></tr><tr valign="top"><td>setupOnAnnounceSubscribe</td><td>function</td><td>function () </td></tr><tr valign="top"><td>cayennDevices</td><td>object</td><td></td></tr><tr valign="top"><td>cayennDeviceIdShowing</td><td>object</td><td></td></tr><tr valign="top"><td>onAnnounce</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>sendCmd</td><td>function</td><td>function (deviceid, maincmd, subcmd) </td></tr><tr valign="top"><td>updateCmdsForDevice</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>showOneDevice</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>showIconList</td><td>function</td><td>function () </td></tr><tr valign="top"><td>loader</td><td>object</td><td>All widgets should have an init method. It should be run by the
+instantiating code like a workspace or a different widget.</td></tr><tr valign="top"><td>iconsClear</td><td>function</td><td>function () </td></tr><tr valign="top"><td>iconGet</td><td>function</td><td>function (device) </td></tr><tr valign="top"><td>setupRefreshBtn</td><td>function</td><td>function () </td></tr><tr valign="top"><td>sendRefreshCmd</td><td>function</td><td>function () </td></tr><tr valign="top"><td>getSubnetBroadcast</td><td>function</td><td>function (callback) </td></tr><tr valign="top"><td>setupOnAnnounceSubscribe</td><td>function</td><td>function () </td></tr><tr valign="top"><td>cayennDevices</td><td>object</td><td></td></tr><tr valign="top"><td>cayennDeviceIdShowing</td><td>object</td><td></td></tr><tr valign="top"><td>onAnnounce</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>sendCmd</td><td>function</td><td>function (deviceid, maincmd, subcmd) </td></tr><tr valign="top"><td>onIncomingCmd</td><td>function</td><td>function (deviceid, cmd) </td></tr><tr valign="top"><td>updateQueueForDevice</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>updateCmdsForDevice</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>onCmdBtn</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>showOneDevice</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>cmdHistory</td><td>object</td><td></td></tr><tr valign="top"><td>cmdHistoryLastIndex</td><td>number</td><td></td></tr><tr valign="top"><td>onKeyUp</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>showIconList</td><td>function</td><td>function () </td></tr><tr valign="top"><td>loader</td><td>object</td><td>All widgets should have an init method. It should be run by the
 instantiating code like a workspace or a different widget.
 /
 init: function() {
 console.log("I am being initted. Thanks.");<br><br>this.setupUiFromLocalStorage();
 this.btnSetup();<br><br>this.setupOnAnnounceSubscribe();<br><br>var that = this;
 setTimeout(function() {
-that.sendRefreshCmd();
+// that.sendRefreshCmd();
 }, 2000);<br><br>this.setupRefreshBtn();<br><br>this.activatePopovers();<br><br>// this.forkSetup();<br><br>this.init3d();<br><br>console.log("I am done being initted.");
 },<br><br>iconsClear: function() {
 $('#' + this.id + ' .cayenn-icons').html("");
@@ -164,6 +164,11 @@ data-content='` + // <table class="table table-condensed table-striped">
 iconHtml += '<p>' + device.Tag.Desc + '</p>';
 }<br><br>if ('Addr' in device && 'IP' in device.Addr) {
 iconHtml += '<p style="font-size:10px;margin-bottom:0;">IP: ' + device.Addr.IP + ':8988 UDP/TCP</p>';
+}
+if ('DeviceId' in device) {
+iconHtml += '<p style="font-size:10px;margin-bottom:0;">DeviceId: ' + device.DeviceId + '</p>';
+}<br><br>if ('Widget' in device) {
+iconHtml += '<p style="font-size:10px;margin-bottom:0;">Widget: ' + device.Widget + '</p>';
 }<br><br>iconHtml += "'>\n";<br><br>if ('Tag' in device && 'Icon' in device.Tag) {
 iconHtml += '<div class="cayenn-deviceimg" style="border:0px solid blue;background-image:url(\'' +
 device.Tag.Icon + '\');" ></div>';
@@ -178,7 +183,7 @@ return iconHtml;
 setupRefreshBtn: function() {
 var btn = $('#' + this.id + ' .btn-refresh');
 btn.click(this.sendRefreshCmd.bind(this));
-this.iconsClear();
+// this.iconsClear();
 },
 sendRefreshCmd: function() {
 console.log("sendRefreshCmd");
@@ -212,30 +217,45 @@ onAnnounce: function(payload) {
 console.log("Cayenn - got onAnnounce. payload:", payload);<br><br>// We can get these callbacks for
 // 1) General announcements of "i-am-a-client"
 // 2) Responses to commands<br><br>// see if this is response to command
-if ('Tag' in payload && 'Response' in payload.Tag) {
-// this is response to command request<br><br>if (payload.Tag.Response == "GetCmds") {<br><br>// this is a list of commands for a specific device.
+if ('Tag' in payload && 'Resp' in payload.Tag) {
+// this is response to command request<br><br>// we allow both formats of Response or the shorter Resp
+// if ('Resp' in payload.Tag) payload.Tag.Response = payload.Tag.Resp;<br><br>if (payload.Tag.Resp == "GetCmds") {<br><br>// this is a list of commands for a specific device.
 // see if this is the device that's showing, otherwise ignore it
 if (this.cayennDeviceIdShowing == payload.DeviceId) {
 // yes, this is for the showing device
 this.updateCmdsForDevice(payload);
 }
-}<br><br>} else {
+} else if (payload.Tag.Resp == "GetQ") {<br><br>// device sent us their command queue, i.e. the queue that executes as
+// the Coolant counter goes up<br><br>// this is a list of queue items for a specific device.
+// see if this is the device that's showing, otherwise ignore it
+if (this.cayennDeviceIdShowing == payload.DeviceId) {
+// yes, this is for the showing device
+this.updateQueueForDevice(payload);
+}<br><br>}<br><br>} else {
 // this is response to Discover command<br><br>// see if we already have this in our list
 if (payload.DeviceId in this.cayennDevices) {
 console.log("device already exists in memory.");<br><br>} else {
-console.log("looks like new device");<br><br>// store device in global
+console.log("looks like new device");<br><br>// see if first time creating icon, thus remove info text in main area
+if (Object.keys(this.cayennDevices).length == 0) {
+// yes, first icon seen
+// so wipe info in main area
+this.iconsClear();
+}<br><br>// store device in global
 this.cayennDevices[payload.DeviceId] = payload;<br><br>// create icon
 var iconHtml = this.iconGet(payload);
 var iconEl = $(iconHtml);
 iconEl.popover({html:true});
 iconEl.click({DeviceId:payload.DeviceId}, this.showOneDevice.bind(this));
-$('#' + this.id + ' .cayenn-icons').append(iconEl);
-}<br><br><br><br>}<br><br>
+$('#' + this.id + ' .cayenn-icons').append(iconEl);<br><br>
+}<br><br><br><br>}<br><br>// store this in the device log, and show it if the device log is showing
+this.onIncomingCmd(payload.DeviceId, payload.JsonTag);<br><br>
 },
 sendCmd: function(deviceid, maincmd, subcmd) {
 // here we send a command and store a history of it in the log
 var cmd = maincmd + " " + subcmd;
-if (! cmd.endsWith("\n")) cmd += "\n";
+// remove newline
+cmd = cmd.replace(/\n$/, "");
+// if (! cmd.endsWith("\n")) cmd += "\n";
 console.log("sending command for deviceid:", deviceid, " cmd:", cmd);
 chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// see if history of log
 var device = this.cayennDevices[deviceid];
@@ -246,21 +266,96 @@ var entryEl = $('<tr><td>> ' + entry.ts.toLocaleTimeString() + '</td><td>' + sub
 logEl.prepend(entryEl);
 }
 },
+onIncomingCmd: function(deviceid, cmd) {
+var entry = {ts:new Date(), subcmd: cmd, dir:"in"};<br><br>var device = this.cayennDevices[deviceid];
+if (!('log' in device)) device.log = [];<br><br>device.log.unshift(entry);<br><br>// if view for this device is showing, shove it in log view
+if (this.cayennDeviceIdShowing == deviceid) {
+var logEl = $('#' + this.id + ' .cayenn-log');
+var entryEl = $('<tr><td>< ' + entry.ts.toLocaleTimeString() + '</td><td>' + cmd + '</td></tr>');
+logEl.prepend(entryEl);
+}
+},
+updateQueueForDevice: function(payload) {
+// we get this call when we get back a list of queued commands from the device
+console.log("updateQueueForDevice. payload:", payload);<br><br>// check we have good data
+// {"Queue":{},"Resp":"GetQ"}
+// {"Queue":{"0":{"Cmd":"LaserBoot"}},"Resp":"GetQ"}
+if ('Tag' in payload && 'Resp' in payload.Tag && 'Queue' in payload.Tag) {<br><br>console.log("we have queue items folks");<br><br>// tag looks good. populate cmd list
+var el = $('#' + this.id + ' .cayenn-onedevice');
+var qListEl = el.find('.cayenn-qlist');<br><br>// wipe list
+qListEl.html("");<br><br>var keys = Object.keys(payload.Tag.Queue);<br><br>if (keys.length == 0) {
+var htmlEl = $('<tr><td>' + "Queue is empty. " + new Date().toLocaleTimeString() + '</td></tr>');
+qListEl.append(htmlEl);
+}<br><br>
+console.log("keys.length:", keys.length);
+for (var i = 0; i < keys.length; i++) {
+var key = keys[i];
+var q = payload.Tag.Queue[key];
+console.log("q:", q);
+var htmlEl = $('<tr><td>' + key + '</td><td>' + JSON.stringify(q) + '</td></tr>');
+// htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
+qListEl.append(htmlEl);
+}<br><br>} else {
+console.error("Does not look like we got a good Tag list for response to GetCmds. payload:", payload);
+}<br><br>},
 updateCmdsForDevice: function(payload) {
 // we get this call when we get back a list of commands from the device
 console.log("updateCmdsForDevice. payload:", payload);<br><br>// check we have good data
-if ('Tag' in payload && 'Response' in payload.Tag && 'Cmds' in payload.Tag) {<br><br>// tag looks good. populate cmd list
+if ('Tag' in payload && 'Resp' in payload.Tag && 'Cmds' in payload.Tag) {<br><br>// tag looks good. populate cmd list
 var el = $('#' + this.id + ' .cayenn-onedevice');
 var cmdListEl = el.find('.cayenn-cmdlist');
 cmdListEl.html("");
 for (var i = 0; i < payload.Tag.Cmds.length; i++) {
 var cmd = payload.Tag.Cmds[i];
 var htmlEl = $('<button class="btn btn-xs btn-default">' + cmd + '</button>');
+htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
 cmdListEl.append(htmlEl);
 }<br><br>} else {
 console.error("Does not look like we got a good Tag list for response to GetCmds. payload:", payload);
 }<br><br>},
-showOneDevice: function(evt) {<br><br>console.log("showing one device. evt.data:", evt.data);<br><br>// what device are we dealing with
+onCmdBtn: function(evt) {<br><br>// see if the cmd has parentheses cuz that can't be used directly
+var cmd = evt.data.Cmd;<br><br>if (cmd == "CmdQ") {
+// special command we know of so we handle it with parameters
+var obj = {
+Cmd: "CmdQ",
+Id: 0,
+RunCmd: {
+Cmd: "(cmd-here)"
+}
+}
+console.log("obj:", obj);
+var subcmd = JSON.stringify(obj);
+console.log("subcmd:", subcmd);<br><br>// place in text area
+$('#' + this.id + ' .cayenn-entercmd').val(subcmd);<br><br>} else if (cmd.match(/(.*){(.*)}/)) {
+// place in text input area instead
+console.log("need to place in text area. re:", RegExp.$1, RegExp.$2, "cmd:", cmd);<br><br>var obj = {
+Cmd: RegExp.$1.trim(),
+}<br><br>// get elements inside json
+var params = RegExp.$2;
+console.log("params:", params);
+// split params on comma
+var p = params.split(/,/);
+console.log("p:", p);
+for (var i = 0; i < p.length; i++) {
+var item = p[i];
+obj[item] = 0;
+}<br><br>// var obj = JSON.parse(json);
+console.log("obj:", obj);
+var subcmd = JSON.stringify(obj);
+console.log("subcmd:", subcmd);<br><br>// place in text area
+$('#' + this.id + ' .cayenn-entercmd').val(subcmd);<br><br>} else {
+// var device = this.cayennDevices[evt.data.DeviceId];
+var device = this.cayennDevices[this.cayennDeviceIdShowing];
+var maincmd = "cayenn-sendtcp " + device.Addr.IP;
+var subcmd = '{"Cmd":"' + cmd + '"}';
+this.sendCmd(device.DeviceId, maincmd, subcmd);<br><br>// do some special moves for certain commands
+if (cmd == "GetQ") { 
+$('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
+} else if (cmd == "WipeQ") {
+$('#' + this.id + ' .cayenn-qlist').html("<tr><td>Please run GetQ to refresh...</td></tr>");
+}
+}
+},<br><br>showOneDevice: function(evt) {<br><br>console.log("showing one device. evt.data:", evt.data);<br><br>// what device are we dealing with
 var device = this.cayennDevices[evt.data.DeviceId];<br><br>// set this as the active showing device
 this.cayennDeviceIdShowing = device.DeviceId;<br><br>// hide the icon list, show the single device
 $('#' + this.id + ' .cayenn-icon-list').addClass('hidden');<br><br>var el = $('#' + this.id + ' .cayenn-onedevice');<br><br>// swap in the icon
@@ -271,7 +366,8 @@ el.find('.cayenn-icon').parent().html(iconHtml); //.replaceWith(iconEl);<br><br>
 // make sure old events are removed
 el.find(".cayenn-backbtn").off( "click" ).click(this.showIconList.bind(this));
 el.find('.cayenn-icon').off( "click" ).click(this.showIconList.bind(this));<br><br>// wipe old cmds
-el.find('.cayenn-cmdlist').html("(Asking device...)");<br><br>// show it
+el.find('.cayenn-cmdlist').html("(Asking device...)");<br><br>// wipe log area
+el.find('.cayenn-log').html("");<br><br>// show it
 el.removeClass('hidden');<br><br>// now ask the device to give us its commands
 var maincmd = "cayenn-sendtcp " + device.Addr.IP;
 var subcmd = '{"Cmd":"GetCmds"}';
@@ -279,7 +375,44 @@ this.sendCmd(device.DeviceId, maincmd, subcmd);
 // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// ask for queue list (may not have one)
 subcmd = '{"Cmd":"GetQ"}';
 this.sendCmd(device.DeviceId, maincmd, subcmd);
-// chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>},
+// chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// wipe current queue list
+$('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");<br><br>// make buttons work in queue tab
+var qEl = $('#' + this.id + ' .cayenn-qlist').parent();
+qEl.find('.btn-ResetCtr').off('click').click({Cmd:"ResetCtr"}, this.onCmdBtn.bind(this));
+// qEl.find('.btn-GetCmds').off('click').click({Cmd:"GetCmds"}, this.onCmdBtn.bind(this));
+qEl.find('.btn-GetQ').off('click').click({Cmd:"GetQ"}, this.onCmdBtn.bind(this));
+qEl.find('.btn-WipeQ').off('click').click({Cmd:"WipeQ"}, this.onCmdBtn.bind(this));
+qEl.find('.btn-CmdQ').off('click').click({Cmd:"CmdQ"}, this.onCmdBtn.bind(this));<br><br>// make it so the enter key works on the text input
+var inputEl = $('#' + this.id + ' .cayenn-entercmd');
+var that = this;
+inputEl.off( "keyup" ).keyup(this.onKeyUp.bind(this));<br><br><br><br>this.activatePopovers();<br><br>},
+cmdHistory: [""],
+cmdHistoryLastIndex: 0,
+onKeyUp: function(evt) {
+console.log("got keyup on input box. evt:", evt, "evt.which", evt.which);
+console.log("cmdHistory:", this.cmdHistory, this.cmdHistoryLastIndex);<br><br>var inputEl = $('#' + this.id + ' .cayenn-entercmd');<br><br>if (evt.which == 13) {
+// we need to send the content from the text area
+var cmd = inputEl.val();
+var d = this.cayennDevices[this.cayennDeviceIdShowing];
+var maincmd = "cayenn-sendtcp " + d.Addr.IP;
+this.sendCmd(this.cayennDeviceIdShowing, maincmd, cmd);
+inputEl.val("");<br><br>// push onto history
+this.cmdHistory.unshift(cmd);
+this.cmdHistoryLastIndex = 0; // reset to top<br><br>} else if (evt.which == 38) {
+// up arrow
+inputEl.val(this.cmdHistory[this.cmdHistoryLastIndex]);
+this.cmdHistoryLastIndex++;
+if (this.cmdHistoryLastIndex > this.cmdHistory.length - 1) this.cmdHistoryLastIndex = this.cmdHistory.length - 1;
+} else if (evt.which == 40) {
+// down arrow
+this.cmdHistoryLastIndex--;
+if (this.cmdHistoryLastIndex < 0) {
+inputEl.val("");
+this.cmdHistoryLastIndex = 0;
+} else {
+inputEl.val(this.cmdHistory[this.cmdHistoryLastIndex]);
+}<br><br>}
+},
 showIconList: function() {<br><br>console.log("showing icon list");<br><br>// hide others
 this.cayennDeviceIdShowing = null;<br><br>// hide the icon list, show the single device
 $('#' + this.id + ' .cayenn-onedevice').addClass('hidden');
