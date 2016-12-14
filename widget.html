@@ -78,7 +78,7 @@
                         
                         <p style="padding-top:10px;">No devices seen on network yet.</p>
                         
-                        <p style="font-size:10px;"><a href="http://chilipeppr2.blogspot.com/">Read this blog</a> to understand how to create a Cayenn device. Cayenn is 
+                        <p style="font-size:10px;"><a href="http://chilipeppr2.blogspot.com/2016/10/cayenn-protocol-for-chilipeppr_28.html">Read this blog</a> to understand how to create a Cayenn device. Cayenn is 
                         an IoT protocol that allows add-on devices to easily integrate into ChiliPeppr 
                         and sync with your CNC controller. Typical Cayenn devices are lasers, fluid/paste 
                         dispensers, RPM sensors, relays, heating elements, tool changers, etc.</p>
@@ -176,14 +176,15 @@
                 
                     <!-- Per Device Nav tabs -->
                     <ul class="nav nav-tabs" role="tablist">
+                        
                         <li class="active">
-                            <a href="#cayenn-onedevice-tabCmds" role="tab" data-toggle="tab">Commands</a>
-                        </li>
-                        <li>
                             <a href="#cayenn-onedevice-tabLog" role="tab" data-toggle="tab">Log</a>
                         </li>
                         <li>
                             <a href="#cayenn-onedevice-tabQ" role="tab" data-toggle="tab">Queue</a>
+                        </li>
+                        <li class="xactive">
+                            <a href="#cayenn-onedevice-tabCmds" role="tab" data-toggle="tab">Commands</a>
                         </li>
                     </ul>
                     
@@ -191,7 +192,7 @@
                     <div class="tab-content">
             
                         <!-- Per Device. Tab Comands -->
-                        <div class="tab-pane active" id="cayenn-onedevice-tabCmds">
+                        <div class="tab-pane xactive" id="cayenn-onedevice-tabCmds">
                             <div class="cayenn-cmdlist" style="margin-top:6px;">
                                 <button class="btn btn-xs btn-default">ResetCtr</button>
                                 <button class="btn btn-xs btn-default">GetCmds</button>
@@ -199,8 +200,20 @@
                                 <button class="btn btn-xs btn-default">WipeQ</button>
                             </div>
                         </div>
-                        <div class="tab-pane" id="cayenn-onedevice-tabLog">
-                            <table xvalign="top" style="font-size:10px;margin-top:10px" class="cayenn-log table table-condensed table-striped">
+                        <div class="tab-pane active" id="cayenn-onedevice-tabLog">
+                            <div class="dropdown dropdown-cayenn-cmds" style="">
+                              <button class="btn btn-default btn-xs dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                Device Commands
+                                <span class="caret"></span>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-cayenn-cmds" aria-labelledby="dropdownMenu1">
+                                <li><a href="#">ResetCtr</a></li>
+                                <li><a href="#">GetCmds</a></li>
+                                <li><a href="#">GetQ</a></li>
+                                <li><a href="#">WipeQ</a></li>
+                              </ul>
+                            </div>
+                            <table xvalign="top" style="" class="cayenn-log table-log table table-condensed table-striped">
                                 <tr><td>> 3:13 PM</td><td>{"Cmd":"GetQ"}</td></tr>
                                 <tr><td>< 3:13 PM</td><td>{"Announce":"i-am-a-client"}</td></tr>
                                 <tr><td>> 3:13 PM</td><td>{"Cmd":"GetCmds"}</td></tr>
@@ -252,6 +265,83 @@
         </div>
     
     </div>
+    
+    <!-- Cayenn File Pre-Process Modal -->
+    <div class="modal fade " id="com-chilipeppr-widget-cayenn-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>-->
+                    <h4 class="modal-title">Your Gcode File Has Cayenn Commands</h4>
+                </div>
+                <div class="modal-body">
+                    <!--<div class="alert alert-danger" role="alert">ChiliPeppr was unable to automatically determine whether your file should run in inches (G20) or millimetres (G21).</div>-->
+                    <p>
+                        Your Gcode file contains unprocessed Cayenn commands. We will pre-process the file to convert
+                        the commands to coolant on/off commands with ID counters.
+                    </p>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-processit" data-dismiss="modal">Process It</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    
+    <!-- Cayenn File Pre-Process Modal -->
+    <div class="modal fade " id="com-chilipeppr-widget-cayenn-modal-errors" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>-->
+                    <h4 class="modal-title">Your Cayenn Commands Have Errors</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger" role="alert">ChiliPeppr was unable to parse your Gcode file because your Cayenn commands had errors.</div>
+                    <p class="errlist">
+                        
+                    </p>
+
+                </div>
+                <div class="modal-footer">
+                    <!--<button type="button" class="btn btn-default btn-processit" data-dismiss="modal">Process It</button>-->
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    
+    <!-- Cayenn File No Device Modal -->
+    <div class="modal fade " id="com-chilipeppr-widget-cayenn-modal-nodevice" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>-->
+                    <h4 class="modal-title">No Cayenn Device Matches your Gcode Device</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger" role="alert">ChiliPeppr was unable to find a Cayenn device that matched your Gcode device.</div>
+                    <p class="errlist">
+                        
+                    </p>
+
+                </div>
+                <div class="modal-footer">
+                    <!--<button type="button" class="btn btn-default btn-processit" data-dismiss="modal">Process It</button>-->
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    
 </body>
 
 </html>

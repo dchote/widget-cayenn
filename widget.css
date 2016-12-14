@@ -11,9 +11,9 @@
 #com-chilipeppr-widget-cayenn .panel-body {
     /*padding:8px 14px;*/
     padding:0;
-    height:200px;
+    height:250px;
     position:relative;
-    overflow:hidden;
+    /*overflow:hidden;*/
 }
 
 .cayenn-icon-list {
@@ -76,6 +76,20 @@
 }
 .cayenn-onedevice {
     overflow: auto;
-    height: 165px;
+    height: 215px;
     padding: 10px;
+}
+.dropdown-cayenn-cmds {
+    margin-top: 3px;
+}
+.dropdown-cayenn-cmds-abs {
+    position:absolute;
+    top: 36px;
+}
+#com-chilipeppr-widget-cayenn .table-log {
+    font-size:10px;
+    margin-top:3px
+}
+#com-chilipeppr-widget-cayenn .table-log.table-when-dropdown {
+    margin-top:28px
 }

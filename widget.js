@@ -77,11 +77,31 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
     // $('#' + myWidget.id).css('margin', '20px
     $('body').css('padding', '20px');
     $('title').html(myWidget.name);
+
+    // Inject new div to contain widget or use an existing div with an ID
+    $("body").append('<' + 'div id="myDivElemDragdrop"><' + '/div>');
+    
+    chilipeppr.load(
+      "#myDivElemDragdrop",
+      "http://raw.githubusercontent.com/chilipeppr/elem-dragdrop/master/auto-generated-widget.html",
+      function() {
+        // Callback after widget loaded into #myDivElemDragdrop
+        // Now use require.js to get reference to instantiated widget
+        cprequire(
+          ["inline:com-chilipeppr-elem-dragdrop"], // the id you gave your widget
+          function(myObjElemDragdrop) {
+            // Callback that is passed reference to the newly loaded widget
+            console.log("Element / Drag Drop just got loaded.", myObjElemDragdrop);
+            myObjElemDragdrop.init();
+            myObjElemDragdrop.bind("body", null);
+          }
+        );
+      }
+    );
     
     // Inject new div to contain widget or use an existing div with an ID
     $("body").append('<' + 'div id="myDivWidgetSerialport"><' + '/div>');
-    
-    
+
     chilipeppr.load(
       "#myDivWidgetSerialport",
       "http://raw.githubusercontent.com/chilipeppr/widget-spjs/master/auto-generated-widget.html",
@@ -99,6 +119,7 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
         );
       }
     );
+    
     
 
 } /*end_test*/ );
@@ -172,9 +193,16 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             this.setupOnAnnounceSubscribe();
             
             var that = this;
+            
+            // find devices 2 secs after load
             setTimeout(function() {
-                // that.sendRefreshCmd();
+                that.sendRefreshCmd();
             }, 2000);
+            
+            // also look 20 secs later
+            // setTimeout(function() {
+            //     that.sendRefreshCmd();
+            // }, 20000);
             
             this.setupRefreshBtn();
             
@@ -183,10 +211,284 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // this.forkSetup();
             
             this.init3d();
-
+            
+            this.setupDragDropIntercept();
+            this.setupOnPlayResetCtr();
+            
             console.log("I am done being initted.");
         },
-        
+        /**
+         * We watch the play button and make sure we send a ResetCtr for all devices that
+         * are in this Gcode file.
+         */
+        setupOnPlayResetCtr: function() {
+            console.error("setupOnPlayResetCtr not implemented yet");
+            chilipeppr.subscribe("/com-chilipeppr-widget-gcode/onplay", this, this.onPlay);
+            
+        },
+        onPlay: function() {
+            console.error("cayenn onPlay not implemented yet");
+            chilipeppr.publish("/com-chilipeppr-elem-flashmsg/flashmsg", "Need to send reset ctr", "Need to send reset ctr, but not implemented yet. do it.");
+                    t
+        },
+        /**
+         * We need to watch drag drop events of files to see if they contain
+         * Cayenn commands. If so, we need to modify those to coolant on/off commands
+         * and make sure they're mapped to real Cayenn devices.
+         */
+        setupDragDropIntercept: function() {
+            // subscribe to file load events
+            // do it a a stronger priority than default so we get this first
+            // before the 3d viewser since we modify gcode and may have
+            // to re-issue it
+            // priority is 5. default is 10. gcode widget uses priority 9. so we should beat it at 5,
+            // but still leave room for other widget pre-processors.
+            chilipeppr.subscribe("/com-chilipeppr-elem-dragdrop/ondropped", this, this.onFileLoaded, 5);
+        },
+        resendGcodeToWorkspace: function() {
+            // we need to send this gcode file back to the workspace
+            // however, we don't want to get it back ourself, so unsubscribe
+            // from the drag/drop event. then send. the re-subscribe.
+            chilipeppr.unsubscribe("/com-chilipeppr-elem-dragdrop/ondropped",  this.onFileLoaded);
+            var obj = {
+                gcode: this.fileLines.join("\n"),
+                info: this.fileInfo
+            };
+            chilipeppr.publish("/com-chilipeppr-elem-dragdrop/loadGcodeDoNotCreateRecentFileEntry", obj);
+            chilipeppr.subscribe("/com-chilipeppr-elem-dragdrop/ondropped", this, this.onFileLoaded);
+            
+        },
+        file: null, // holds drag dropped file
+        fileInfo: null, // holds meta-data
+        onFileLoaded: function (txt, info, skipLocalStore) {
+            console.log("Got Cayenn onFileLoaded. txt.length:", txt.length, "info:", info, "skipLocalStore", skipLocalStore);
+            this.fileInfo = info;
+            
+            //Check for Cayenn cmds. Exit onFileLoaded and prompt user to specify
+            if (txt.match(/\({"CayennDevice":/i) ) {
+                // we found a cayenn command. cool. process the file.
+                console.log("found Cayenn cmd in file");
+                this.file = txt;
+                // do as setTimeout so this method returns below with false so no other widgets
+                // process this file, because we will re-issue it.
+                setTimeout(this.showModal.bind(this), 100);
+            }
+            
+            // we return false to tell pubsub that no further
+            // listeners should parse this onDropped because we just
+            // reissued it
+            return false;
+        },
+        showModal: function() {
+            
+            var dlg = $('#com-chilipeppr-widget-cayenn-modal');
+            var btn = dlg.find('.btn-processit');
+            btn.off('click'); // remove click events
+            btn.click(this.processFile.bind(this));
+            dlg.modal('show');
+            $(window).trigger('resize');
+        },
+        processFile: function() {
+            console.log("processFile");
+            
+            // pull out all lines that have a Cayenn cmd
+            var fileArr = this.file.split(/\n/);
+            
+            // start id counter
+            var id = 0;
+            
+            var isErrors = false;
+            var errArr = [];
+            
+            var newFileArr = [];
+            
+            // keep track of commands in an array so we can upload at the end
+            var devices = [];
+            var lastCayennDeviceName = null;
+            
+            for (var i = 0; i < fileArr.length; i++) {
+                var line = fileArr[i];
+                // see if there's a cayeen cmd
+                // ({"CayennDevice":"Laser6w","Cmd":"LaserBoot","PauseAfter":2})
+                // ({"Cmd":"PwmOn","Hz":1000,"Duty":1023})
+                
+                // We need to convert those lines to
+                // M7 G4 P2 ({"CayennDevice":"Laser6w","Cmd":"LaserBoot","PauseAfter":2,"Id":0})
+                // M9 (cayenn)
+                // M7 G4 P0.01 ({"Cmd":"PwmOn","Hz":1000,"Duty":1023,"Id":1})
+                // M9 (cayenn)
+                
+                // if we have a line with M9 (cayenn) just wipe it
+                if (line.match(/M9 \(cayenn\)/)) {
+                    console.log("dropping previous M9 (cayenn) line cuz we will regen it");
+                } else if (line.match(/\(({.*})\)/)) {
+                    // we have a line that's a JSON cmd in a comment
+                    console.log("line with json cmd:", line, RegExp.$1);
+                    
+                    var json = RegExp.$1;
+                    // var obj = JSON.parse(json);
+                    var obj = null;
+                    try {
+                        eval("obj = " + json);
+                    } catch (e) {
+                        // chilipeppr.publish("/com-chilipeppr-elem-flashmsg/flashmsg", "Error Parsing Your Cayenn Command", "We got an error parsing your Cayenn Command. " + json);
+                        isErrors = true;
+                        errArr.push("Err line " + i + " " + json);
+                    }
+                    
+                    // see if it already has M7 in it, cuz if it does it's already processed
+                    // ACTUALLY, we will just rebuild these M7 lines if they are already in there
+                    if (line.match(/M7|M8/i)) {
+                        console.log("line already has M7 or M8, so it is processed, but we will reprocess");
+                        // process it again
+                        
+                    }
+                    
+                    // process it
+                    
+                    // see if there is a CayennDevice specified
+                    if ('CayennDevice' in obj) {
+                        // there is, since Gcode is a streaming protocol assume all subsequent Cayenn cmds
+                        // are for this device
+                        lastCayennDeviceName = obj.CayennDevice;
+                        if (lastCayennDeviceName in devices) {
+                            // we already created this device
+                        } else {
+                            // we did not create this device
+                            devices[lastCayennDeviceName] = [];
+                        }
+                    }
+                    
+                    // insert id into json
+                    obj.Id = id;
+
+                    // append this command
+                    devices[lastCayennDeviceName].push(obj);
+                    
+                    // now create Gcode line with M7 pause so device sees HIGH/LOW on coolant pin
+                    var line2 = "M8 G4 ";
+                    // figure out if they asked for pause other than default
+                    if ('PauseAfter' in obj) {
+                        // they want custom pause
+                        line2 += "P" + obj.PauseAfter;
+                    } else {
+                        line2 += "P0.1"; // just enough for esp8266 or other device to see HIGH/LOW
+                    }
+                    
+                    // re-add my json
+                    line2 += " (" + JSON.stringify(obj) + ")";
+                    
+                    // push onto new file array
+                    newFileArr.push(line2);
+                    
+                    // add LOW on coolant pin on next line
+                    newFileArr.push("M9 (cayenn)");
+                    
+                    // increment id ctr
+                    id++;
+                }  else {
+                    // just append it
+                    newFileArr.push(line);
+                }
+            }
+            
+            if (isErrors) {
+                this.showErrorModal(errArr);
+            } else {
+                console.log("new file:");
+                console.log(newFileArr.join("\n"));
+                // console.log("devices:", devices);
+                
+                // upload to device
+                this.uploadCmdsToCayennDevice(devices);
+            }
+            // M7 G4 P0.01 
+        },
+        showErrorModal: function(errArr) {
+            var dlg = $('#com-chilipeppr-widget-cayenn-modal-errors');
+            var p = dlg.find(".errlist");
+            p.html(errArr.join("<br>"));
+            dlg.modal('show');
+            $(window).trigger('resize');
+        },
+        showNoDeviceErrorModal: function(errTxt) {
+            var dlg = $('#com-chilipeppr-widget-cayenn-modal-nodevice');
+            var p = dlg.find(".errlist");
+            p.html(errTxt);
+            dlg.modal('show');
+            $(window).trigger('resize');
+        },
+        /**
+         * This method lets you upload a list of commands to a device. Simply
+         * provide the device name and the commands and we will upload it.
+         * Pass in:
+         * { "Laser6W":
+         *      [{Cmd:"LaserOn",Id:0}, {Cmd:"LaserOff",Id:1}],
+         *   "Air":
+         *      [{Cmd:"AirOn",Id:2}]
+         * }
+         */
+        uploadCmdsToCayennDevice: function(devices) {
+            console.log("uploadCmdsToCayennDevice. devices:", devices);
+            console.log(this.cayennDevices);
+            
+            // loop thru device names
+            var keys = Object.keys(devices);
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                console.log("device name:", key);
+                
+                // see if we have device id for this device name
+                // we may get multiple devices here
+                var deviceIds = this.getDeviceIdFromDeviceName(key);
+                
+                if (deviceIds.length == 1) {
+                    
+                    // good, we have one device by this name
+                    var deviceId = deviceIds[0];
+                    var device = this.cayennDevices[deviceId];
+                    var cmds = devices[key];
+                    console.log("cmds:", cmds);
+                    
+                    // before we send any commands we need to wipe the queue
+                    var maincmd = "cayenn-sendtcp " + device.Addr.IP;
+                    this.sendCmd(deviceId, maincmd, '{"Cmd":"WipeQ"}');
+                    
+                    for (var i = 0; i < cmds.length; i++) {
+                        var cmd = cmds[i];
+                        
+                        // need to build a cmd that looks like
+                        // {"Cmd":"CmdQ","Id":0,"RunCmd":{"Cmd":"(cmd-here)"}}
+                        // pop off the id in the orignal cmd, cuz we elevate it to the main cmd
+                        var subcmd = {Cmd:"CmdQ", Id:cmd.Id, RunCmd:null};
+                        delete cmd.Id;
+                        subcmd.RunCmd = cmd;
+                        var subcmdStr = JSON.stringify(subcmd);
+                        console.log("maincmd:", maincmd, "subcmd:", subcmd);
+                        
+                        this.sendCmd(deviceId, maincmd, subcmdStr);
+                        
+                        // since we are queuing, we need to watch memory
+                        //this.sendCmd(deviceId, maincmd, '{"Cmd":"Mem"}');
+                        
+                    }
+                    
+                } else if (deviceIds.length > 1) {
+                    // we have multiple devices. we should prompt them for which device to use
+                    console.error("Not implemented yet");
+                    // chilipeppr.publish("/com-chilipeppr-elem-flashmsg/flashmsg", "Error Parsing Your Cayenn Command", "We got an error parsing your Cayenn Command. " + json);
+                    this.showNoDeviceErrorModal("You have multiple devices that have the name: " + key + ". Those devices are: " + deviceIds.join(", ") + ". Letting you pick which one to use is not implemented yet. Please edit widget.");
+                
+                } else {
+                    // can't find device by this name. throw up error.
+                    this.showNoDeviceErrorModal("Your Gcode file is specifying the Cayenn Device name: " + 
+                    key + " but your Cayenn device list has no device matching that name.<br><br>" +
+                    "ChiliPeppr is aware of these device names:<br>" + this.getAllDeviceNames().join("<br>"));
+                }
+                
+                
+            }
+        },
         iconsClear: function() {
             $('#' + this.id + ' .cayenn-icons').html("");
         },
@@ -274,7 +576,47 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
         setupOnAnnounceSubscribe: function() {
             chilipeppr.subscribe("/com-chilipeppr-widget-serialport/onAnnounce", this, this.onAnnounce.bind(this));    
         },
+        /**
+         * Loop thru all device id's and see if the device name matches. If multiple
+         * device id's exist for a name, the UI will have to prompt user for which exact device id
+         * should be used.
+         */
+        getDeviceIdFromDeviceName: function(name) {
+            console.log("getDeviceIdFromDeviceName. name:", name);
+            
+            var res = [];
+            var keys = Object.keys(this.cayennDevices);
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                var dev = this.cayennDevices[key];
+                
+                if ('Tag' in dev && 'Name' in dev.Tag) {
+                    // see if name matches
+                    if (dev.Tag.Name == name) {
+                        res.push(key);
+                    }
+                }
+            }
+            return res;
+        },
+        /**
+         * Will loop thru all devices and grab the names and return those in an array.
+         */
+        getAllDeviceNames: function() {
+            var res = [];
+            var keys = Object.keys(this.cayennDevices);
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                var dev = this.cayennDevices[key];
+                
+                if ('Tag' in dev && 'Name' in dev.Tag) {
+                    res.push(dev.Tag.Name + " (DeviceId:" + key + ")");
+                }
+            }
+            return res;
+        },
         cayennDevices: {},
+        // cayennDevicesByName: [],
         cayennDeviceIdShowing: null,
         onAnnounce: function(payload) {
             console.log("Cayenn - got onAnnounce. payload:", payload);
@@ -332,6 +674,10 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     // store device in global
                     this.cayennDevices[payload.DeviceId] = payload;
                     
+                    // if ('Tag' in payload && 'Name' in payload.Tag) {
+                    //     this.cayennDevicesByName[payload.Tag.Name] = payload.DeviceId;
+                    // }
+                    
                     // create icon
                     var iconHtml = this.iconGet(payload);
                     var iconEl = $(iconHtml);
@@ -351,6 +697,12 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             
         },
+        /**
+         * Send a command to the Cayenn device. 
+         * sendCmd: function(deviceid, maincmd, subcmd)
+         * You must pass in a deviceid. The maincmd is send-tcp or send-udp
+         * The subcmd is the Cayenn cmd like {"Cmd":"LaserOn"}
+         */
         sendCmd: function(deviceid, maincmd, subcmd) {
             // here we send a command and store a history of it in the log
             var cmd = maincmd + " " + subcmd;
@@ -390,42 +742,76 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 logEl.prepend(entryEl);
             }
         },
+        lastQueueItems: null,
         updateQueueForDevice: function(payload) {
             // we get this call when we get back a list of queued commands from the device
             console.log("updateQueueForDevice. payload:", payload);
             
-            // check we have good data
-            // {"Queue":{},"Resp":"GetQ"}
-            // {"Queue":{"0":{"Cmd":"LaserBoot"}},"Resp":"GetQ"}
-            if ('Tag' in payload && 'Resp' in payload.Tag && 'Queue' in payload.Tag) {
-                
-                console.log("we have queue items folks");
-                
-                // tag looks good. populate cmd list
-                var el = $('#' + this.id + ' .cayenn-onedevice');
-                var qListEl = el.find('.cayenn-qlist');
-                
-                // wipe list
-                qListEl.html("");
-                
-                var keys = Object.keys(payload.Tag.Queue);
-                
-                if (keys.length == 0) {
-                    var htmlEl = $('<tr><td>' + "Queue is empty. " + new Date().toLocaleTimeString() + '</td></tr>');
-                    qListEl.append(htmlEl);
-                }
-                
-                
-                console.log("keys.length:", keys.length);
-                for (var i = 0; i < keys.length; i++) {
-                    var key = keys[i];
-                    var q = payload.Tag.Queue[key];
-                    console.log("q:", q);
-                    var htmlEl = $('<tr><td>' + key + '</td><td>' + JSON.stringify(q) + '</td></tr>');
-                    // htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
-                    qListEl.append(htmlEl);
-                }
             
+            // tag looks good. populate cmd list
+            var el = $('#' + this.id + ' .cayenn-onedevice');
+            var qListEl = el.find('.cayenn-qlist');
+            
+            // check we have good data
+            // we can get back 
+            // {"Finish":47,"Resp":"GetQ"}
+            // {"Q":{"Cmd":"LaserShutdown","Id":46},"Resp":"GetQ"}
+            // {"Start":0,"Resp":"GetQ"}
+            
+            // which just means it's done sending us it's list
+            if ('Tag' in payload && 'Resp' in payload.Tag && payload.Tag.Resp == "GetQ") {
+                
+                // then we are getting responses for the GetQ command
+                if ('Finish' in payload.Tag) {
+                    
+                    // we are finished with list
+                    console.log("done getting queue items");
+                    
+                    if (this.lastQueueItems.length == 0) {
+                        var htmlEl = $('<tr><td>' + "Queue is empty. " + new Date().toLocaleTimeString() + '</td></tr>');
+                        qListEl.prepend(htmlEl);
+                    } else {
+                        var htmlEl = $('<tr><td colspan=2>' + "Done getting queue at " + new Date().toLocaleTimeString() + '</td></tr>');
+                        qListEl.prepend(htmlEl);
+                    }
+                    
+                    
+                } else if ('Start' in payload.Tag) {
+                    
+                    // we are starting with list
+                    // wipe list
+                    qListEl.html("");
+                    this.lastQueueItems = [];
+                
+                } else if ('Q' in payload.Tag) {
+                
+                    // we are getting an individual item
+                    console.log("we have a queue item. payload:", payload);
+                
+                    this.lastQueueItems.push(payload);
+                    
+                    var htmlEl = $('<tr><td>' + payload.Tag.Q.Id + '</td><td>' + JSON.stringify(payload.Tag.Q) + '</td></tr>');
+                    qListEl.append(htmlEl);
+                
+                    // var keys = Object.keys(payload.Tag.Queue);
+                    
+                    // if (keys.length == 0) {
+                    //     var htmlEl = $('<tr><td>' + "Queue is empty. " + new Date().toLocaleTimeString() + '</td></tr>');
+                    //     qListEl.append(htmlEl);
+                    // }
+                    
+                    
+                    // console.log("keys.length:", keys.length);
+                    // for (var i = 0; i < keys.length; i++) {
+                    //     var key = keys[i];
+                    //     var q = payload.Tag.Queue[key];
+                    //     console.log("q:", q);
+                    //     var htmlEl = $('<tr><td>' + key + '</td><td>' + JSON.stringify(q) + '</td></tr>');
+                    //     // htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
+                    //     qListEl.append(htmlEl);
+                    // }
+                }
+                
             } else {
                 console.error("Does not look like we got a good Tag list for response to GetCmds. payload:", payload);
             }
@@ -448,7 +834,30 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
                     cmdListEl.append(htmlEl);
                 }
-            
+                
+                // also populate the cmd pulldown in log tab
+                var cmdListDd = el.find('.dropdown-menu-cayenn-cmds');
+                cmdListDd.html(""); // wipe pulldown
+                for (var i = 0; i < payload.Tag.Cmds.length; i++) {
+                    var cmd = payload.Tag.Cmds[i];
+                    var htmlEl = $('<li><a href="javascript:">' + cmd + '</a></li>');
+                    htmlEl.click({DeviceId:payload.DeviceId, Cmd:cmd}, this.onCmdBtn.bind(this));
+                    cmdListDd.append(htmlEl);
+                }
+                
+                // make it so on click the button / menu go abs positioning
+                var dd = el.find('.dropdown-cayenn-cmds');
+                var tbl = el.find('.cayenn-log');
+                dd.off(); 
+                dd.on('show.bs.dropdown', function () {
+                  dd.addClass('dropdown-cayenn-cmds-abs');
+                  tbl.addClass('table-when-dropdown');
+                });
+                dd.on('hide.bs.dropdown', function () {
+                  dd.removeClass('dropdown-cayenn-cmds-abs');
+                  tbl.removeClass('table-when-dropdown');
+                });
+
             } else {
                 console.error("Does not look like we got a good Tag list for response to GetCmds. payload:", payload);
             }
