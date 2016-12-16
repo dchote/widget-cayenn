@@ -434,7 +434,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 // M9 (cayenn)
                 
                 // if we have a line with M9 (cayenn) just wipe it
-                if (line.match(/M9 \(cayenn\)/)) {
+                if (line.match(/M9.*\(cayenn\)/i)) {
                     console.log("dropping previous M9 (cayenn) line cuz we will regen it");
                 } else if (line.match(/\(({.*})\)/)) {
                     // we have a line that's a JSON cmd in a comment
@@ -497,7 +497,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     newFileArr.push(line2);
                     
                     // add LOW on coolant pin on next line
-                    newFileArr.push("M9 (cayenn)");
+                    newFileArr.push("M9 G4 P0.1 (cayenn)");
                     
                     // increment id ctr
                     id++;
