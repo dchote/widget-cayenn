@@ -430,7 +430,13 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             btn.off('click'); // remove click events
             btn.click(this.processFile.bind(this));
             dlg.modal('show');
-            $(window).trigger('resize');
+            
+            // also make sure the widget is visible so in the main workspace we are shown at this point
+            $('#' + this.id).removeClass("hidden");
+            
+            setTimeout(function() {
+                $(window).trigger('resize');
+            }, 200);
         },
         processFile: function() {
             console.log("processFile");
