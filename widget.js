@@ -230,7 +230,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             // find devices 2 secs after load
             setTimeout(function() {
-                // that.sendRefreshCmd();
+                that.sendRefreshCmd();
             }, 2000);
             
             // also look 20 secs later
