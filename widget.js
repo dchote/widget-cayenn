@@ -289,7 +289,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 this.isWaitingForLoopbackPlay = false;
                 
                 // hide modal saying we're sending ResetCtr's
-                var modal = $('#com-chilipeppr-widget-cayenn-modal-generalerror');
+                var modal = $('#com-chilipeppr-widget-cayenn-modal-generalmsg');
                 modal.modal('hide');
                 
                 return true;
@@ -337,8 +337,8 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                         }
                         
                         // now send /play again back to Gcode widget, but make sure when re-enter back here that we can skip right to playing
-                        var modal = $('#com-chilipeppr-widget-cayenn-modal-generalerror');
-                        modal.find('.cayenn-errmsg').text("Sent ResetCtr to the following devices: " + keys.join(", "));
+                        var modal = $('#com-chilipeppr-widget-cayenn-modal-generalmsg');
+                        modal.find('.cayenn-infomsg').text("Sent ResetCtr to the following devices: " + keys.join(", "));
                         modal.modal();
                         
                         this.isWaitingForLoopbackPlay = true;

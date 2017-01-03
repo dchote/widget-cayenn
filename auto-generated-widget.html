@@ -462,7 +462,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 this.isWaitingForLoopbackPlay = false;
                 
                 // hide modal saying we're sending ResetCtr's
-                var modal = $('#com-chilipeppr-widget-cayenn-modal-generalerror');
+                var modal = $('#com-chilipeppr-widget-cayenn-modal-generalmsg');
                 modal.modal('hide');
                 
                 return true;
@@ -510,8 +510,8 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                         }
                         
                         // now send /play again back to Gcode widget, but make sure when re-enter back here that we can skip right to playing
-                        var modal = $('#com-chilipeppr-widget-cayenn-modal-generalerror');
-                        modal.find('.cayenn-errmsg').text("Sent ResetCtr to the following devices: " + keys.join(", "));
+                        var modal = $('#com-chilipeppr-widget-cayenn-modal-generalmsg');
+                        modal.find('.cayenn-infomsg').text("Sent ResetCtr to the following devices: " + keys.join(", "));
                         modal.modal();
                         
                         this.isWaitingForLoopbackPlay = true;
@@ -2468,7 +2468,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                         <ul class="dropdown-menu dropdown-menu-right" role="menu"></ul>
                     </div>
                 </div>
-            </div> <span class="panel-title" data-toggle="popover">Cayenn Devices</span> <span style="font-size:9px;" class="fb-build">v1</span>
+            </div> <span class="panel-title" data-toggle="popover">Cayenn Devices</span> <span style="font-size:9px;" class="fb-build">v2</span>
 
         </div>
         <div class="panel-body" style="">
@@ -2491,11 +2491,11 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 <div class="tab-pane active" id="com-chilipeppr-widget-cayenn-tabActive">
                     <div class="cayenn-icons xhidden">
                         
-                        <p style="padding-top:10px;">No devices seen on network yet.</p>
+                        <p style="padding-top:10px;margin-right:20px;">No devices seen on network yet.</p>
                         
                         <p class="alert alert-info" style="margin-right:20px;">Requires Serial Port JSON Server 1.93 or later.</p>
 
-                        <p style="font-size:10px;">
+                        <p style="font-size:11px;margin-right:20px;">
                             <a href="http://chilipeppr2.blogspot.com/2016/10/cayenn-protocol-for-chilipeppr_28.html">Read 
                             this blog</a> to understand how to create a Cayenn device. Cayenn is 
                             an IoT protocol that allows add-on devices to easily integrate into ChiliPeppr 
@@ -2764,6 +2764,30 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     <p class="errlist">
                         
                     </p>
+
+                </div>
+                <div class="modal-footer">
+                    <!--<button type="button" class="btn btn-default btn-processit" data-dismiss="modal">Process It</button>-->
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    
+    <!-- Cayenn General Msg -->
+    <div class="modal fade " id="com-chilipeppr-widget-cayenn-modal-generalmsg" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>-->
+                    <h4 class="modal-title">Cayenn Message</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info cayenn-infomsg" role="alert">
+                       -
+                    </div>
 
                 </div>
                 <div class="modal-footer">
