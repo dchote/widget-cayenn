@@ -718,7 +718,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             // show indicator in header of cayenn widget that we're uploading
             $('#' + this.id + ' .progress').removeClass("hidden");
-            $('#' + this.id + ' .progress-bar').css('width', '0%').addClass("active");
+            $('#' + this.id + ' .progress-bar').css('width', '0%').addClass("active").addClass('progress-bar-striped');
             $('#' + this.id + ' .upload-text').text("Upload");
 
                             
