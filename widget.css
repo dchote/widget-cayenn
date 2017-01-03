@@ -78,6 +78,7 @@
     overflow: auto;
     height: 215px;
     padding: 10px;
+    width: 100%;
 }
 .dropdown-cayenn-cmds {
     margin-top: 3px;
@@ -92,4 +93,61 @@
 }
 #com-chilipeppr-widget-cayenn .table-log.table-when-dropdown {
     margin-top:28px
+}
+.cayenn-checkProgress {
+    color: rgb(221, 221, 221);
+    padding: 4px;
+    margin: -4px;
+}
+.cayenn-checkProgress.cayenn-checkProgressSent {
+    color: #E6D8BB;
+    background-color: #fcf8e3;
+}
+.cayenn-checkProgress.cayenn-checkProgressDone {
+    color: #000000;
+    background-color: transparent;
+}
+#com-chilipeppr-widget-cayenn-modal-uploadprogress .cayenn-icon {
+    margin: 0 15px 15px 0px;
+    float: left;
+    cursor: initial;
+    background-color: transparent;
+}
+#com-chilipeppr-widget-cayenn-modal-uploadprogress .table-cayenn-upload {
+    font-size:10px;
+}
+.progress-bar.active, .progress.active .progress-bar {
+    animation: progress-bar-stripes 2s linear infinite;
+}
+.progress-bar-striped, .progress-striped .progress-bar {
+    background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+    background-size: 40px 40px;
+}
+@keyframes progress-bar-stripes {
+0% {
+    background-position: 40px 0;
+}
+100% {
+    background-position: 0 0;
+}
+}
+
+#com-chilipeppr-widget-cayenn .progress {
+    cursor: pointer;
+}
+#com-chilipeppr-widget-cayenn .progress:hover {
+    border:1px solid blue;
+}
+#com-chilipeppr-widget-cayenn .progress:active {
+    border:1px solid black;
+}
+#com-chilipeppr-widget-cayenn .upload-text {
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    font-size:11px;
+    line-height:20px;
+    text-align:center;
 }

@@ -36,6 +36,12 @@
         <div class="panel-heading ">
 
             <div class="btn-toolbar pull-right" role="toolbar">
+                <div class="progress hidden" style="width:60px;float:left;position:relative;">
+                  <div class="progress-bar progress-bar-striped" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 82%;xmin-width:2em;">
+                    <span class="sr-only">2% Complete</span>
+                  </div>
+                  <div class="upload-text" xstyle="">Upload</div>
+                </div>
                 <div class="btn-group">
                     <button type="button" class="btn btn-xs btn-default btn-refresh" data-delay="1000" 
                     data-animation="true" data-placement="auto" data-container="body" data-trigger="hover" 
@@ -78,10 +84,15 @@
                         
                         <p style="padding-top:10px;">No devices seen on network yet.</p>
                         
-                        <p style="font-size:10px;"><a href="http://chilipeppr2.blogspot.com/2016/10/cayenn-protocol-for-chilipeppr_28.html">Read this blog</a> to understand how to create a Cayenn device. Cayenn is 
-                        an IoT protocol that allows add-on devices to easily integrate into ChiliPeppr 
-                        and sync with your CNC controller. Typical Cayenn devices are lasers, fluid/paste 
-                        dispensers, RPM sensors, relays, heating elements, tool changers, etc.</p>
+                        <p class="alert alert-info" style="margin-right:20px;">Requires Serial Port JSON Server 1.93 or later.</p>
+
+                        <p style="font-size:10px;">
+                            <a href="http://chilipeppr2.blogspot.com/2016/10/cayenn-protocol-for-chilipeppr_28.html">Read 
+                            this blog</a> to understand how to create a Cayenn device. Cayenn is 
+                            an IoT protocol that allows add-on devices to easily integrate into ChiliPeppr 
+                            and sync with your CNC controller. Typical Cayenn devices are lasers, fluid/paste 
+                            dispensers, RPM sensors, relays, heating elements, tool changers, etc.</p>
+                            
                         
                         <!--<div class="cayenn-icon" style="" data-delay="1000" data-animation="true" data-placement="auto" data-container="body" data-trigger="hover" -->
                         <!--    data-title="DispenserPaste" -->
@@ -186,6 +197,9 @@
                         <li class="xactive">
                             <a href="#cayenn-onedevice-tabCmds" role="tab" data-toggle="tab">Commands</a>
                         </li>
+                        <li class="xactive">
+                            <a href="#cayenn-onedevice-tabInfo" role="tab" data-toggle="tab">Info</a>
+                        </li>
                     </ul>
                     
                     <!-- Per Device Tab panes -->
@@ -228,16 +242,25 @@
                                 <button class="btn btn-xs btn-default btn-CmdQ">CmdQ</button>
                             </div>
                             <table xvalign="top" style="width:100%;xheight:100%;margin-top:6px" class="cayenn-qlist table table-condensed table-striped">
-                                <tr><th colspan="2" class="">
-                                    
-                                </th></tr>
-                                <tr><td>0</td><td>{"Cmd":"LinearSlideOn"}</td></tr>
-                                <tr><td>1</td><td>{"Cmd":"AirOn"}</td></tr>
-                                <tr><td>2</td><td>{"Cmd":"AugerOn","Speed":5}</td></tr>
-                                <tr><td>3</td><td>{"Cmd":"AugerOff"}</td></tr>
-                                <tr><td>4</td><td>{"Cmd":"AirOff"}</td></tr>
-                                <tr><td>5</td><td>{"Cmd":"LinearSlideOff"}</td></tr>
+                                <tr><td colspan="2" class="">
+                                    Click GetQ to retrieve...
+                                </td></tr>
+                                <!--<tr><td>0</td><td>{"Cmd":"LinearSlideOn"}</td></tr>-->
+                                <!--<tr><td>1</td><td>{"Cmd":"AirOn"}</td></tr>-->
+                                <!--<tr><td>2</td><td>{"Cmd":"AugerOn","Speed":5}</td></tr>-->
+                                <!--<tr><td>3</td><td>{"Cmd":"AugerOff"}</td></tr>-->
+                                <!--<tr><td>4</td><td>{"Cmd":"AirOff"}</td></tr>-->
+                                <!--<tr><td>5</td><td>{"Cmd":"LinearSlideOff"}</td></tr>-->
                             </table>
+                        </div>
+                        <div class="tab-pane" id="cayenn-onedevice-tabInfo">
+                            <div style="padding:10px;">
+                                <p class="tabInfo-name" style="xfont-size:10px;margin-bottom:0;">Name: LaserUV</p>
+                                <p class="tabInfo-desc" style="xfont-size:10px;margin-bottom:0;">Description: Control the BDR209 UV laser</p>
+                                <p class="tabInfo-ip" style="xfont-size:10px;margin-bottom:0;">IP: 10.0.0.5:8988 UDP/TCP</p>
+                                <p class="tabInfo-deviceid" style="xfont-size:10px;margin-bottom:0;">DeviceId: chip:903763-mac:60:01:94:0d:ca:53</p>
+                                <p class="tabInfo-widget" style="xfont-size:10px;margin-bottom:0;">Widget: com-chilipeppr-widget-laser</p>
+                            </div>
                         </div>
 
                 </td></tr></table>
@@ -292,7 +315,7 @@
     </div>
     <!-- /.modal -->
     
-    <!-- Cayenn File Pre-Process Modal -->
+    <!-- Cayenn File Pre-Process Modal for Errors -->
     <div class="modal fade " id="com-chilipeppr-widget-cayenn-modal-errors" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -302,6 +325,33 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-danger" role="alert">ChiliPeppr was unable to parse your Gcode file because your Cayenn commands had errors.</div>
+                    <p class="errlist">
+                        
+                    </p>
+
+                </div>
+                <div class="modal-footer">
+                    <!--<button type="button" class="btn btn-default btn-processit" data-dismiss="modal">Process It</button>-->
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    
+    <!-- Cayenn General Error -->
+    <div class="modal fade " id="com-chilipeppr-widget-cayenn-modal-generalerror" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>-->
+                    <h4 class="modal-title">Cayenn Error</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger cayenn-errmsg" role="alert">
+                       -
+                    </div>
                     <p class="errlist">
                         
                     </p>
@@ -331,6 +381,47 @@
                         
                     </p>
 
+                </div>
+                <div class="modal-footer">
+                    <!--<button type="button" class="btn btn-default btn-processit" data-dismiss="modal">Process It</button>-->
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    
+    <!-- Cayenn Upload Progress Modal -->
+    <div class="modal fade " id="com-chilipeppr-widget-cayenn-modal-uploadprogress" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>-->
+                    <h4 class="modal-title">Cayenn Device Upload Progress</h4>
+                </div>
+                <div class="modal-body">
+                    
+                    <div class="cayenn-device-region-template hidden">
+                        <div class="cayenn-device-name-region">
+                            <!--Device: <span class="device-name">Laser</span>-->
+                            <div class="cayenn-device-icon">
+                            </div>
+                        </div>
+                        
+                        <p>Commands to Upload: <span class="upload-count">21</span></p>
+                        <div class="progress">
+                          <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 2%;xmin-width:2em;">
+                            <span class="sr-only">2% Complete</span>
+                          </div>
+                        </div>
+                        <table class="table table-condensed table-striped table-cayenn-upload">
+                            <tr><th></th><th>Command</th><th>Status</th></tr>
+                            <tr><td><span class="glyphicon glyphicon-ok cayenn-checkProgress cayenn-checkProgressDone"></span></td><td>{"Cmd":"WipeQ"}</td><td>Completed</td></tr>
+                            <tr><td><span class="glyphicon glyphicon-ok cayenn-checkProgress cayenn-checkProgressSent"></span></td><td>{"Cmd":"CmdQ","Id":0,"RunCmd":{"CayennDevice":"LaserUV","Cmd":"LaserBoot","PauseAfter":2}}</td><td>Sent. Waiting for verify...</td></tr>
+                            <tr><td><span class="glyphicon glyphicon-ok cayenn-checkProgress"></span></td><td>{"Cmd":"CmdQ","Id":1,"RunCmd":{"Cmd":"PwmOff"}}</td><td>Waiting...</td></tr>
+                        </table>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <!--<button type="button" class="btn btn-default btn-processit" data-dismiss="modal">Process It</button>-->

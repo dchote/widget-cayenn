@@ -115,7 +115,7 @@ To better understand how ChiliPeppr's publish() method works see amplify.js's do
           </tr>
       </thead>
       <tbody>
-      <tr valign="top"><td>/com-chilipeppr-widget-cayenn/com-chilipeppr-widget-serialport/onAnnounce</td><td>We subscribe to this signal so we can hear about announcements of devices from SPJS.</td></tr>    
+      <tr valign="top"><td>/com-chilipeppr-widget-cayenn/com-chilipeppr-widget-serialport/onAnnounce</td><td>We subscribe to this signal so we can hear about announcements of devices from SPJS.</td></tr><tr valign="top"><td>/com-chilipeppr-widget-cayenn/com-chilipeppr-widget-gcode//onplay</td><td>We subscribe to this signal so we can interrupt the start of the Gcode run and send ResetCtr commands to all Cayenn devices listed in the Gcode.</td></tr>    
       </tbody>
   </table>
 
@@ -138,18 +138,24 @@ other widgets know how to subscribe to them and what they do.</td></tr><tr valig
 or elements, that this widget/element publishes to.</td></tr><tr valign="top"><td>foreignSubscribe</td><td>object</td><td>Please see docs above.<br><br>Document the foreign subscribe signals, i.e. signals owned by other widgets
 or elements, that this widget/element subscribes to.</td></tr><tr valign="top"><td>init</td><td>function</td><td>function () <br><br>All widgets should have an init method. It should be run by the
 instantiating code like a workspace or a different widget.</td></tr><tr valign="top"><td>setupOnPlayResetCtr</td><td>function</td><td>function () <br><br>We watch the play button and make sure we send a ResetCtr for all devices that
-are in this Gcode file.</td></tr><tr valign="top"><td>onPlay</td><td>function</td><td>function () </td></tr><tr valign="top"><td>setupDragDropIntercept</td><td>function</td><td>function () <br><br>We need to watch drag drop events of files to see if they contain
+are in this Gcode file.</td></tr><tr valign="top"><td>isWaitingForLoopbackPlay</td><td>boolean</td><td></td></tr><tr valign="top"><td>onPlay</td><td>function</td><td>function (payload) <br><br>We get called here when we see the /onPlay pubsub signal. This means we have to make sure everything is safe to run, i.e.
+1) We have a Cayenn Gcode file and it matches with our devices
+2) We have uploaded everything to the devices
+3) We have sent ResetCtr's to all devices so they sync correctly</td></tr><tr valign="top"><td>setupDragDropIntercept</td><td>function</td><td>function () <br><br>We need to watch drag drop events of files to see if they contain
 Cayenn commands. If so, we need to modify those to coolant on/off commands
-and make sure they're mapped to real Cayenn devices.</td></tr><tr valign="top"><td>resendGcodeToWorkspace</td><td>function</td><td>function () </td></tr><tr valign="top"><td>file</td><td>object</td><td></td></tr><tr valign="top"><td>fileInfo</td><td>object</td><td></td></tr><tr valign="top"><td>onFileLoaded</td><td>function</td><td>function (txt, info, skipLocalStore) </td></tr><tr valign="top"><td>showModal</td><td>function</td><td>function () </td></tr><tr valign="top"><td>processFile</td><td>function</td><td>function () </td></tr><tr valign="top"><td>showErrorModal</td><td>function</td><td>function (errArr) </td></tr><tr valign="top"><td>showNoDeviceErrorModal</td><td>function</td><td>function (errTxt) </td></tr><tr valign="top"><td>uploadCmdsToCayennDevice</td><td>function</td><td>function (devices) <br><br>This method lets you upload a list of commands to a device. Simply
+and make sure they're mapped to real Cayenn devices.</td></tr><tr valign="top"><td>resendGcodeToWorkspace</td><td>function</td><td>function () </td></tr><tr valign="top"><td>file</td><td>object</td><td></td></tr><tr valign="top"><td>fileLines</td><td>object</td><td></td></tr><tr valign="top"><td>fileInfo</td><td>object</td><td></td></tr><tr valign="top"><td>onFileLoaded</td><td>function</td><td>function (txt, info, skipLocalStore) </td></tr><tr valign="top"><td>showModal</td><td>function</td><td>function () </td></tr><tr valign="top"><td>processFile</td><td>function</td><td>function () </td></tr><tr valign="top"><td>showErrorModal</td><td>function</td><td>function (errArr) </td></tr><tr valign="top"><td>showNoDeviceErrorModal</td><td>function</td><td>function (errTxt) </td></tr><tr valign="top"><td>currentGcodeFileDevices</td><td>object</td><td></td></tr><tr valign="top"><td>cmdUploadQueue</td><td>object</td><td>Build a queue first of the commands we will send.</td></tr><tr valign="top"><td>uploadCmdsToCayennDevice</td><td>function</td><td>function (devices) <br><br>This method lets you upload a list of commands to a device. Simply
 provide the device name and the commands and we will upload it.
 Pass in:
 { "Laser6W":
 [{Cmd:"LaserOn",Id:0}, {Cmd:"LaserOff",Id:1}],
 "Air":
 [{Cmd:"AirOn",Id:2}]
-}</td></tr><tr valign="top"><td>iconsClear</td><td>function</td><td>function () </td></tr><tr valign="top"><td>iconGet</td><td>function</td><td>function (device) </td></tr><tr valign="top"><td>setupRefreshBtn</td><td>function</td><td>function () </td></tr><tr valign="top"><td>sendRefreshCmd</td><td>function</td><td>function () </td></tr><tr valign="top"><td>getSubnetBroadcast</td><td>function</td><td>function (callback) </td></tr><tr valign="top"><td>setupOnAnnounceSubscribe</td><td>function</td><td>function () </td></tr><tr valign="top"><td>getDeviceIdFromDeviceName</td><td>function</td><td>function (name) <br><br>Loop thru all device id's and see if the device name matches. If multiple
+}</td></tr><tr valign="top"><td>setupUpload</td><td>function</td><td>function () <br><br>Setup header of widget to allow clicking the progress bar to see full dialog.</td></tr><tr valign="top"><td>doUpload</td><td>function</td><td>function () <br><br>In this method, we prep for the uploading. We setup the UI to show the progress, prep
+the upload queue, and then start the async sending queue.</td></tr><tr valign="top"><td>isCurrentlyUploading</td><td>boolean</td><td></td></tr><tr valign="top"><td>startUploading</td><td>function</td><td>function () <br><br>This method slowly uploads commands. TODO watch that they're all done.</td></tr><tr valign="top"><td>isDidUploadNextCmdSendSomething</td><td>boolean</td><td></td></tr><tr valign="top"><td>doUploadNextCmd</td><td>function</td><td>function () <br><br>This method finds the next queue item needing sent to Cayenn device, sends it, and updates
+the UI as it does it. This can be called asynchronously so that lots of UI processing
+and waiting can occur to verify the upload.</td></tr><tr valign="top"><td>iconsClear</td><td>function</td><td>function () </td></tr><tr valign="top"><td>iconGet</td><td>function</td><td>function (device) </td></tr><tr valign="top"><td>setupRefreshBtn</td><td>function</td><td>function () </td></tr><tr valign="top"><td>sendRefreshCmd</td><td>function</td><td>function () </td></tr><tr valign="top"><td>getSubnetBroadcast</td><td>function</td><td>function (callback) </td></tr><tr valign="top"><td>setupOnAnnounceSubscribe</td><td>function</td><td>function () </td></tr><tr valign="top"><td>getDeviceIdFromDeviceName</td><td>function</td><td>function (name) <br><br>Loop thru all device id's and see if the device name matches. If multiple
 device id's exist for a name, the UI will have to prompt user for which exact device id
-should be used.</td></tr><tr valign="top"><td>getAllDeviceNames</td><td>function</td><td>function () <br><br>Will loop thru all devices and grab the names and return those in an array.</td></tr><tr valign="top"><td>cayennDevices</td><td>object</td><td></td></tr><tr valign="top"><td>cayennDeviceIdShowing</td><td>object</td><td></td></tr><tr valign="top"><td>onAnnounce</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>sendCmd</td><td>function</td><td>function (deviceid, maincmd, subcmd) </td></tr><tr valign="top"><td>onIncomingCmd</td><td>function</td><td>function (deviceid, cmd) </td></tr><tr valign="top"><td>lastQueueItems</td><td>object</td><td></td></tr><tr valign="top"><td>updateQueueForDevice</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>updateCmdsForDevice</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>onCmdBtn</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>showOneDevice</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>cmdHistory</td><td>object</td><td></td></tr><tr valign="top"><td>cmdHistoryLastIndex</td><td>number</td><td></td></tr><tr valign="top"><td>onKeyUp</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>showIconList</td><td>function</td><td>function () </td></tr><tr valign="top"><td>loader</td><td>object</td><td>Send a command to the Cayenn device. 
+should be used.</td></tr><tr valign="top"><td>getAllDeviceNames</td><td>function</td><td>function () <br><br>Will loop thru all devices and grab the names and return those in an array.</td></tr><tr valign="top"><td>cayennDevices</td><td>object</td><td></td></tr><tr valign="top"><td>cayennDeviceIdShowing</td><td>object</td><td></td></tr><tr valign="top"><td>onAnnounce</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>lastTransactionId</td><td>number</td><td>Keep track of each transaction id because Cayenn devices will regurgitate the response with this id.</td></tr><tr valign="top"><td>sendCmd</td><td>function</td><td>function (deviceid, maincmd, subcmd) </td></tr><tr valign="top"><td>onIncomingCmd</td><td>function</td><td>function (deviceid, cmd) </td></tr><tr valign="top"><td>lastQueueItems</td><td>object</td><td></td></tr><tr valign="top"><td>updateQueueForDevice</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>updateCmdsForDevice</td><td>function</td><td>function (payload) </td></tr><tr valign="top"><td>onCmdBtn</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>showOneDevice</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>cmdHistory</td><td>object</td><td></td></tr><tr valign="top"><td>cmdHistoryLastIndex</td><td>number</td><td></td></tr><tr valign="top"><td>onKeyUp</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>showIconList</td><td>function</td><td>function () </td></tr><tr valign="top"><td>loader</td><td>object</td><td>Send a command to the Cayenn device. 
 sendCmd: function(deviceid, maincmd, subcmd)
 You must pass in a deviceid. The maincmd is send-tcp or send-udp
 The subcmd is the Cayenn cmd like {"Cmd":"LaserOn"}
@@ -171,12 +177,16 @@ logEl.prepend(entryEl);
 }
 },
 onIncomingCmd: function(deviceid, cmd) {
+console.log("onIncomingCmd. deviceid:", deviceid, "cmd:", cmd);<br><br>if (deviceid != null && deviceid.length > 0) {
 var entry = {ts:new Date(), subcmd: cmd, dir:"in"};<br><br>var device = this.cayennDevices[deviceid];
 if (!('log' in device)) device.log = [];<br><br>device.log.unshift(entry);<br><br>// if view for this device is showing, shove it in log view
 if (this.cayennDeviceIdShowing == deviceid) {
 var logEl = $('#' + this.id + ' .cayenn-log');
 var entryEl = $('<tr><td>< ' + entry.ts.toLocaleTimeString() + '</td><td>' + cmd + '</td></tr>');
 logEl.prepend(entryEl);
+}
+} else {
+console.warn("got deviceid that is empty. huh?");
 }
 },
 lastQueueItems: null,
@@ -264,8 +274,8 @@ RunCmd: {
 Cmd: "(cmd-here)"
 }
 }
-console.log("obj:", obj);
-var subcmd = JSON.stringify(obj);
+obj.TransId = this.lastTransactionId++;
+console.log("obj:", obj);<br><br>var subcmd = JSON.stringify(obj);
 console.log("subcmd:", subcmd);<br><br>// place in text area
 $('#' + this.id + ' .cayenn-entercmd').val(subcmd);<br><br>} else if (cmd.match(/(.*){(.*)}/)) {
 // place in text input area instead
@@ -281,6 +291,7 @@ for (var i = 0; i < p.length; i++) {
 var item = p[i];
 obj[item] = 0;
 }<br><br>// var obj = JSON.parse(json);
+obj.TransId = this.lastTransactionId++;
 console.log("obj:", obj);
 var subcmd = JSON.stringify(obj);
 console.log("subcmd:", subcmd);<br><br>// place in text area
@@ -288,7 +299,7 @@ $('#' + this.id + ' .cayenn-entercmd').val(subcmd);<br><br>} else {
 // var device = this.cayennDevices[evt.data.DeviceId];
 var device = this.cayennDevices[this.cayennDeviceIdShowing];
 var maincmd = "cayenn-sendtcp " + device.Addr.IP;
-var subcmd = '{"Cmd":"' + cmd + '"}';
+var subcmd = '{"Cmd":"' + cmd + '", "TransId":' + this.lastTransactionId++ + '}';
 this.sendCmd(device.DeviceId, maincmd, subcmd);<br><br>// do some special moves for certain commands
 if (cmd == "GetQ") { 
 $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
@@ -311,13 +322,13 @@ el.find('.cayenn-cmdlist').html("(Asking device...)");<br><br>// wipe log area
 el.find('.cayenn-log').html("");<br><br>// show it
 el.removeClass('hidden');<br><br>// now ask the device to give us its commands
 var maincmd = "cayenn-sendtcp " + device.Addr.IP;
-var subcmd = '{"Cmd":"GetCmds"}';
+var subcmd = '{"Cmd":"GetCmds", "TransId":' + this.lastTransactionId++ + '}';
 this.sendCmd(device.DeviceId, maincmd, subcmd);
 // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// ask for queue list (may not have one)
 subcmd = '{"Cmd":"GetQ"}';
-this.sendCmd(device.DeviceId, maincmd, subcmd);
+// this.sendCmd(device.DeviceId, maincmd, subcmd);
 // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// wipe current queue list
-$('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");<br><br>// make buttons work in queue tab
+// $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");<br><br>// make buttons work in queue tab
 var qEl = $('#' + this.id + ' .cayenn-qlist').parent();
 qEl.find('.btn-ResetCtr').off('click').click({Cmd:"ResetCtr"}, this.onCmdBtn.bind(this));
 // qEl.find('.btn-GetCmds').off('click').click({Cmd:"GetCmds"}, this.onCmdBtn.bind(this));
