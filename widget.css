@@ -151,3 +151,8 @@
     line-height:20px;
     text-align:center;
 }
+.msg-device-name {
+    background-color: #ddd;
+    border-radius: 18px;
+    padding: 4px 10px;
+}

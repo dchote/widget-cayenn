@@ -167,6 +167,11 @@
     line-height:20px;
     text-align:center;
 }
+.msg-device-name {
+    background-color: #ddd;
+    border-radius: 18px;
+    padding: 4px 10px;
+}
     </style>
 
     <script type='text/javascript'>
@@ -725,7 +730,10 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 // console.log("devices:", devices);
                 
                 // upload to device
-                this.uploadCmdsToCayennDevice(devices);
+                var that = this;
+                setTimeout(function() {
+                    that.uploadCmdsToCayennDevice(devices);
+                }, 1000);
                 
                 // then pass back to the workspace
                 this.fileLines = newFileArr;
@@ -782,8 +790,12 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // setup the upload queue
             this.cmdUploadQueue = {};
             
+            // keep track of errors to show in one dialog box
+            var errMsgs = [];
+            
             // loop thru device names
             var keys = Object.keys(devices);
+            console.log("keys we will loop thru. keys:", keys);
             for (var i = 0; i < keys.length; i++) {
                 var key = keys[i];
                 console.log("device name:", key);
@@ -814,8 +826,8 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     // this.sendCmd(deviceId, maincmd, subcmd);
                     this.cmdUploadQueue[key].Queue.push({DeviceId:deviceId, MainCmd: maincmd, SubCmd: subcmd});
                     
-                    for (var i = 0; i < cmds.length; i++) {
-                        var cmd = cmds[i];
+                    for (var i2 = 0; i2 < cmds.length; i2++) {
+                        var cmd = cmds[i2];
                         
                         // need to build a cmd that looks like
                         // {"Cmd":"CmdQ","Id":0,"RunCmd":{"Cmd":"(cmd-here)"}}
@@ -842,20 +854,20 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     this.showNoDeviceErrorModal("You have multiple devices that have the name: " + key + ". Those devices are: " + deviceIds.join(", ") + ". Letting you pick which one to use is not implemented yet. Please edit widget.");
                     isErrors = true;
                 } else {
-                    // can't find device by this name. throw up error.
-                    var msg = "Your Gcode file is specifying the Cayenn Device name: " + 
-                    key + " but your Cayenn device list has no device matching that name.<br><br>" + 
-                    "We will need to cancel " +
-                    "the opening of this Gcode file since Cayenn device syncing will not be possible until you " +
-                    "have a device available that matches each device specified in your Gcode file.<br><br>" +
-                    "ChiliPeppr is aware of these device names:<br>";
                     
-                    if (this.getAllDeviceNames().length > 0) {
-                        msg += this.getAllDeviceNames().join("<br>");
-                    } else {
-                        msg += "(No Devices Exist).";
-                    }
-                    this.showNoDeviceErrorModal( msg );
+                    console.warn("Got a device name that we don't have a device for.");
+                    
+                    // can't find device by this name. throw up error.
+                    var msg = 'Your Gcode file is specifying the Cayenn Device name: <span class="msg-device-name">' + 
+                    key + "</span> but your Cayenn device list has no device matching that name.<br><br>";
+                    // "We can still open this file, but we will not upload any commands to your Cayenn device.<br><br>";
+                    errMsgs.push(msg);
+                    
+                    // "Be warned to re-open this file to get your commands uploaded once your device is online.<br><br>" +
+                    // "We will need to cancel " +
+                    // "the opening of this Gcode file since Cayenn device syncing will not be possible until you " +
+                    // "have a device available that matches each device specified in your Gcode file.<br><br>" +
+                    
                     isErrors = true;
                 }
                 
@@ -867,6 +879,32 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             if (!isErrors) {
                 // we got no errors. clean. actually do upload
                 this.doUpload();
+                console.log("got no errors, will upload now.");
+            } else {
+                
+                var msg = errMsgs.join("\n");
+                
+                msg += "ChiliPeppr is aware of these device names:<br>";
+                
+                if (this.getAllDeviceNames().length > 0) {
+                    msg += this.getAllDeviceNames().join("<br>");
+                } else {
+                    msg += "(No Devices Exist).";
+                }
+                
+                msg += "<br><br>You must re-open this file once your devices are online so ChiliPeppr can upload correctly.";
+                
+                var keysForDevicesThatDidExist = Object.keys(this.cmdUploadQueue);
+                if (keysForDevicesThatDidExist.length > 0) {
+                    msg += "<br><br>You do have devices online that were in the Gcode file. " + 
+                    'ChiliPeppr will still upload those commands to: <span class="msg-device-name">' + 
+                    keysForDevicesThatDidExist.join(", ") + "</span>";
+                    
+                    this.doUpload();
+                }
+                
+                this.showNoDeviceErrorModal( msg );
+            
             }
         },
         /**
