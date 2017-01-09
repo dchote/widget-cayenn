@@ -941,6 +941,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
         },
         sendRefreshCmd: function() {
             console.log("sendRefreshCmd");
+            
+            this.iconsClear();
+            
             var that = this;
             this.getSubnetBroadcast(function(ip) {
                 console.log("got subnet broadcast. ip:", ip);
