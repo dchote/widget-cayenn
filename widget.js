@@ -251,6 +251,8 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             this.setupUpload();
             
+            this.forkSetup();
+            
             console.log("I am done being initted.");
         },
         /**
