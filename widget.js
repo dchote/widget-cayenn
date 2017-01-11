@@ -919,6 +919,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
         },
         iconsClear: function() {
             $('#' + this.id + ' .cayenn-icons').html("");
+            
+            // also wipe the cayenn devices in memory
+            this.cayennDevices = {};
         },
         iconGet: function(device) {
             
