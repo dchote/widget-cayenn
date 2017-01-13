@@ -310,7 +310,8 @@ $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Please run GetQ to refresh...<
 },<br><br>showOneDevice: function(evt) {<br><br>console.log("showing one device. evt.data:", evt.data);<br><br>// what device are we dealing with
 var device = this.cayennDevices[evt.data.DeviceId];<br><br>// set this as the active showing device
 this.cayennDeviceIdShowing = device.DeviceId;<br><br>// hide the icon list, show the single device
-$('#' + this.id + ' .cayenn-icon-list').addClass('hidden');<br><br>var el = $('#' + this.id + ' .cayenn-onedevice');<br><br>// swap in the icon
+$('#' + this.id + ' .cayenn-icon-list').addClass('hidden');<br><br>// change the css of the panel body
+$('#' + this.id + ' .panel-body').addClass('device-showing');<br><br>var el = $('#' + this.id + ' .cayenn-onedevice');<br><br>// swap in the icon
 var iconHtml = this.iconGet(device);
 var iconEl = $(iconHtml);
 // console.log("swapping in icon:", iconHtml);
@@ -369,7 +370,8 @@ showIconList: function() {<br><br>console.log("showing icon list");<br><br>// hi
 this.cayennDeviceIdShowing = null;<br><br>// hide the icon list, show the single device
 $('#' + this.id + ' .cayenn-onedevice').addClass('hidden');
 $('#' + this.id + ' #cayenn-renderarea').addClass('hidden');<br><br>// show the icon list, show the single device
-$('#' + this.id + ' .cayenn-icon-list').removeClass('hidden');
+$('#' + this.id + ' .cayenn-icon-list').removeClass('hidden');<br><br>// change the css of the panel body
+$('#' + this.id + ' .panel-body').removeClass('device-showing');
 },<br><br>/* 3D Related Methods Below</td></tr><tr valign="top"><td>camera</td><td>object</td><td></td></tr><tr valign="top"><td>scene</td><td>object</td><td></td></tr><tr valign="top"><td>renderer</td><td>object</td><td></td></tr><tr valign="top"><td>controls</td><td>object</td><td></td></tr><tr valign="top"><td>init3d</td><td>function</td><td>function () </td></tr><tr valign="top"><td>viewExtents</td><td>function</td><td>function () </td></tr><tr valign="top"><td>onScroll</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>onMouseOrTouch</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>render</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>onResize</td><td>function</td><td>function (evt) </td></tr><tr valign="top"><td>activatePopovers</td><td>function</td><td>function () </td></tr><tr valign="top"><td>btnSetup</td><td>function</td><td>function () <br><br>Call this method from init to setup all the buttons when this widget
 is first loaded. This basically attaches click events to your 
 buttons. It also turns on all the bootstrap popovers by scanning

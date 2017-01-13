@@ -27,16 +27,27 @@
 #com-chilipeppr-widget-cayenn .panel-body {
     /*padding:8px 14px;*/
     padding:0;
-    height:250px;
+    height:200px;
     position:relative;
-    /*overflow:hidden;*/
+    width:100%;
+    overflow:auto;
+}
+
+#com-chilipeppr-widget-cayenn .panel-body.device-showing {
+    /*padding:8px 14px;*/
+    /*padding:0;*/
+    height:250px;
+    /*position:relative;*/
+    /*width: 100%;*/
+    overflow: visible;
 }
 
 .cayenn-icon-list {
     padding: 0 0 0 15px;
 }
 .cayenn-icon {
-    width:100px;
+    /*width:100px;*/
+    width:88px;
     margin:15px 15px 0px 0px;
     float:left;
     cursor: pointer;
@@ -44,7 +55,8 @@
 }
 .cayenn-deviceimg {
     box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-    width: 100px;
+    /*width: 100px;*/
+    width: 88px;
     height: 80px;
     background-size: cover;
     border-top-left-radius: 6px;
@@ -60,7 +72,8 @@
     border-bottom-right-radius: 6px;
     padding: 4px 6px;
     white-space: nowrap;
-    width: 100px;
+    /*width: 100px;*/
+    width: 88px;
     overflow: hidden;
     text-overflow:ellipsis;
     font-size:12px;
@@ -1571,6 +1584,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // hide the icon list, show the single device
             $('#' + this.id + ' .cayenn-icon-list').addClass('hidden');
             
+            // change the css of the panel body
+            $('#' + this.id + ' .panel-body').addClass('device-showing');
+            
             var el = $('#' + this.id + ' .cayenn-onedevice');
             
             // swap in the icon
@@ -1675,6 +1691,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
 
             // show the icon list, show the single device
             $('#' + this.id + ' .cayenn-icon-list').removeClass('hidden');
+            
+            // change the css of the panel body
+            $('#' + this.id + ' .panel-body').removeClass('device-showing');
         },
 
         /* 3D Related Methods Below */

@@ -1393,6 +1393,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // hide the icon list, show the single device
             $('#' + this.id + ' .cayenn-icon-list').addClass('hidden');
             
+            // change the css of the panel body
+            $('#' + this.id + ' .panel-body').addClass('device-showing');
+            
             var el = $('#' + this.id + ' .cayenn-onedevice');
             
             // swap in the icon
@@ -1497,6 +1500,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
 
             // show the icon list, show the single device
             $('#' + this.id + ' .cayenn-icon-list').removeClass('hidden');
+            
+            // change the css of the panel body
+            $('#' + this.id + ' .panel-body').removeClass('device-showing');
         },
 
         /* 3D Related Methods Below */
