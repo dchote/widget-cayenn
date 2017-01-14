@@ -425,8 +425,13 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             
         },
+        /**
+         * Show Process It Modal.
+         * For now, try just bypassing this since we have other dialog boxes that sort of handle this now.
+         */
         showModal: function() {
             
+            /*
             var dlg = $('#com-chilipeppr-widget-cayenn-modal');
             var btn = dlg.find('.btn-processit');
             btn.off('click'); // remove click events
@@ -439,6 +444,10 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             setTimeout(function() {
                 $(window).trigger('resize');
             }, 200);
+            */
+            
+            // Just go ahead and process as if they wanted it to
+            this.processFile();
         },
         processFile: function() {
             console.log("processFile");
@@ -760,6 +769,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // get template for how to show queue
             var tmpltEl = $('#com-chilipeppr-widget-cayenn-modal-uploadprogress .cayenn-device-region-template');
             
+            // wipe any previous queue items
+            $('#com-chilipeppr-widget-cayenn-modal-uploadprogress .cayenn-device-region-instance').remove();
+            
             // loop thru devices, and then the queue
             var keys = Object.keys(this.cmdUploadQueue);
             for (var i = 0; i < keys.length; i++) {
@@ -770,6 +782,8 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                 // clone template
                 var el = tmpltEl.clone();
                 el.removeClass("hidden");
+                el.removeClass("cayenn-device-region-template");
+                el.addClass("cayenn-device-region-instance");
                 
                 // set class name so we can find it later
                 el.addClass("device-" + key);
