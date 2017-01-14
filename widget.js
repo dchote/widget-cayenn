@@ -1431,7 +1431,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             // wipe current queue list
             $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
-            
+             
             // make buttons work in queue tab
             var qEl = $('#' + this.id + ' .cayenn-qlist').parent();
             qEl.find('.btn-ResetCtr').off('click').click({Cmd:"ResetCtr"}, this.onCmdBtn.bind(this));
