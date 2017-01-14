@@ -1426,11 +1426,11 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             
             // ask for queue list (may not have one)
             subcmd = '{"Cmd":"GetQ"}';
-            // this.sendCmd(device.DeviceId, maincmd, subcmd);
-            // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
+            this.sendCmd(device.DeviceId, maincmd, subcmd);
+            chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
             
             // wipe current queue list
-            // $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
+            $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
             
             // make buttons work in queue tab
             var qEl = $('#' + this.id + ' .cayenn-qlist').parent();

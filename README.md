@@ -327,9 +327,9 @@ var subcmd = '{"Cmd":"GetCmds", "TransId":' + this.lastTransactionId++ + '}';
 this.sendCmd(device.DeviceId, maincmd, subcmd);
 // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// ask for queue list (may not have one)
 subcmd = '{"Cmd":"GetQ"}';
-// this.sendCmd(device.DeviceId, maincmd, subcmd);
-// chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// wipe current queue list
-// $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");<br><br>// make buttons work in queue tab
+this.sendCmd(device.DeviceId, maincmd, subcmd);
+chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);<br><br>// wipe current queue list
+$('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");<br><br>// make buttons work in queue tab
 var qEl = $('#' + this.id + ' .cayenn-qlist').parent();
 qEl.find('.btn-ResetCtr').off('click').click({Cmd:"ResetCtr"}, this.onCmdBtn.bind(this));
 // qEl.find('.btn-GetCmds').off('click').click({Cmd:"GetCmds"}, this.onCmdBtn.bind(this));
