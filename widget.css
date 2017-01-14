@@ -25,14 +25,16 @@
     /*width: 100%;*/
     overflow: visible;
 }
-
+.cayenn-icons {
+    margin-top: 15px;
+}
 .cayenn-icon-list {
     padding: 0 0 0 15px;
 }
 .cayenn-icon {
     /*width:100px;*/
     width:88px;
-    margin:15px 15px 0px 0px;
+    margin:0px 15px 15px 0px;
     float:left;
     cursor: pointer;
     background-color: transparent;

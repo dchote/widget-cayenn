@@ -41,14 +41,16 @@
     /*width: 100%;*/
     overflow: visible;
 }
-
+.cayenn-icons {
+    margin-top: 15px;
+}
 .cayenn-icon-list {
     padding: 0 0 0 15px;
 }
 .cayenn-icon {
     /*width:100px;*/
     width:88px;
-    margin:15px 15px 0px 0px;
+    margin:0px 15px 15px 0px;
     float:left;
     cursor: pointer;
     background-color: transparent;
@@ -1618,7 +1620,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // ask for queue list (may not have one)
             subcmd = '{"Cmd":"GetQ"}';
             this.sendCmd(device.DeviceId, maincmd, subcmd);
-            chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
+            // chilipeppr.publish("/com-chilipeppr-widget-serialport/ws/send", cmd);
             
             // wipe current queue list
             $('#' + this.id + ' .cayenn-qlist').html("<tr><td>Asking device...</td></tr>");
