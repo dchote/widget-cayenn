@@ -431,6 +431,13 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
          */
         showModal: function() {
             
+            // also make sure the widget is visible so in the main workspace we are shown at this point
+            $('#' + this.id).removeClass("hidden");
+            
+            setTimeout(function() {
+                $(window).trigger('resize');
+            }, 500);
+            
             /*
             var dlg = $('#com-chilipeppr-widget-cayenn-modal');
             var btn = dlg.find('.btn-processit');
@@ -438,12 +445,6 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             btn.click(this.processFile.bind(this));
             dlg.modal('show');
             
-            // also make sure the widget is visible so in the main workspace we are shown at this point
-            $('#' + this.id).removeClass("hidden");
-            
-            setTimeout(function() {
-                $(window).trigger('resize');
-            }, 200);
             */
             
             // Just go ahead and process as if they wanted it to
