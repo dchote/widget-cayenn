@@ -853,6 +853,9 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     clearInterval(intervalID);
                     that.isCurrentlyUploading = false;
                     
+                    $('#' + that.id + ' .progress-bar').css('width', 100 + '%')
+                        .removeClass("active").removeClass("progress-bar-striped");
+                    $('#' + that.id + ' .upload-text').text("Done");
                 }
             }, 100);
             
@@ -911,9 +914,11 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                             // we just sent last index item, so we're done
                             el.find(".upload-count").html(item.Queue.length + ' <span class="label label-success">Done</span>');
                             el.find(".progress-bar").css('width', 100 + '%').removeClass("active");
-                            $('#' + this.id + ' .progress-bar').css('width', 100 + '%')
-                                .removeClass("active").removeClass("progress-bar-striped");
-                            $('#' + this.id + ' .upload-text').text("Done");
+                            
+                            
+                            // $('#' + this.id + ' .progress-bar').css('width', 100 + '%')
+                            //     .removeClass("active").removeClass("progress-bar-striped");
+                            // $('#' + this.id + ' .upload-text').text("Done");
                         }
                         
                         break;
