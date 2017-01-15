@@ -404,7 +404,7 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             this.fileInfo = info;
             
             //Check for Cayenn cmds. Exit onFileLoaded and prompt user to specify
-            if (txt.match(/\({"CayennDevice":/i) ) {
+            if (txt.match(/\(\s{0,1}{"{0,1}CayennDevice"{0,1}\s*:/i) ) {
                 // we found a cayenn command. cool. process the file.
                 console.log("found Cayenn cmd in file");
                 this.file = txt;
@@ -494,8 +494,18 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                         eval("obj = " + json);
                     } catch (e) {
                         // chilipeppr.publish("/com-chilipeppr-elem-flashmsg/flashmsg", "Error Parsing Your Cayenn Command", "We got an error parsing your Cayenn Command. " + json);
+                        console.error("got error parsing JSON in active comment. e:", e, "json:", json);
                         isErrors = true;
-                        errArr.push("Err line " + i + " " + json);
+                        errArr.push("Err line " + i + " " + json + ". Error was: " + e.toString());
+                        
+                        // since we are dead in the water here, let's just append the line as if it
+                        // had no Cayenn command in it, so the file still opens
+                         
+                        // just append it
+                        newFileArr.push("Err parsing: " + line);
+                        
+                        // jump back to top of for loop
+                        continue;
                     }
                     
                     // see if it already has M7 in it, cuz if it does it's already processed
@@ -524,6 +534,17 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
                     // insert id into json
                     obj.Id = id;
 
+                    // see if we still have no cayenn device
+                    if (!(lastCayennDeviceName in devices)) {
+                        // there's still no active cayenn device likely due to parsing errors
+                        // so just place error and continue
+                        // just append it
+                        newFileArr.push("Err parsing: " + line);
+                        
+                        // jump back to top of for loop
+                        continue;
+                    }
+                    
                     // append this command
                     devices[lastCayennDeviceName].push(obj);
                     
