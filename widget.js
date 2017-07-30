@@ -4,39 +4,17 @@
 // ChiliPeppr Widget/Element Javascript
 
 requirejs.config({
-    /*
-    Dependencies can be defined here. ChiliPeppr uses require.js so
-    please refer to http://requirejs.org/docs/api.html for info.
-    
-    Most widgets will not need to define Javascript dependencies.
-    
-    Make sure all URLs are https and http accessible. Try to use URLs
-    that start with // rather than http:// or https:// so they simply
-    use whatever method the main page uses.
-    
-    Also, please make sure you are not loading dependencies from different
-    URLs that other widgets may already load like jquery, bootstrap,
-    three.js, etc.
-    
-    You may slingshot content through ChiliPeppr's proxy URL if you desire
-    to enable SSL for non-SSL URL's. ChiliPeppr's SSL URL is
-    https://i2dcui.appspot.com which is the SSL equivalent for
-    http://chilipeppr.com
-    */
     paths: {
-        // Example of how to define the key (you make up the key) and the URL
-        // Make sure you DO NOT put the .js at the end of the URL
-        // SmoothieCharts: '//smoothiecharts.org/smoothie',
-        // Three: '//i2dcui.appspot.com/geturl?url=http://threejs.org/build/three.js',
-        Three: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r76/three',
-        ThreeTrackballControls: '//i2dcui.appspot.com/slingshot?url=http://rawgit.com/mrdoob/three.js/r77/examples/js/controls/TrackballControls.js',
-        
+        Three: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/86/three',
+        ThreeTrackballControls: 'https://cdn.rawgit.com/mrdoob/three.js/dev/examples/js/controls/TrackballControls',
     },
     shim: {
-        // See require.js docs for how to define dependencies that
-        // should be loaded before your script/widget.
-        ThreeTrackballControls: ['Three'],
-        
+        Three: {
+            exports: 'THREE'
+        },
+        ThreeTrackballControls: {
+            deps: ['Three'],
+        },
     }
 });
 
@@ -156,6 +134,14 @@ cprequire_test(["inline:com-chilipeppr-widget-cayenn"], function(myWidget) {
     */
     
 } /*end_test*/ );
+
+// Bring THREE in to global scope
+cpdefine('Three', ['https://cdnjs.cloudflare.com/ajax/libs/three.js/86/three.js'], function ( THREE ) {
+    if (typeof window !== 'undefined') {
+        window.THREE = THREE;
+        return THREE;
+    }
+});
 
 // This is the main definition of your widget. Give it a unique name.
 cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "ThreeTrackballControls" /* other dependencies here */ ], function() {
@@ -1737,13 +1723,18 @@ cpdefine("inline:com-chilipeppr-widget-cayenn", ["chilipeppr_ready", "Three", "T
             // camera.aspect = 3.8;
             camera.up.set(0,0,1);
 			camera.position.set(0,-100,100);
-			var bbox = new THREE.BoundingBoxHelper( this.scene.getObjectByName("MainGroup"), 0xff0000 );
-            bbox.update();
+            
+            var helper = new THREE.BoxHelper(this.scene.getObjectByName("MainGroup"), 0xff0000);
+            
+            var box = new THREE.Box3();
+            box.setFromObject(helper);
+            
             // this.scene.add( bbox );
-            console.log("bbox:", bbox);
-			console.log("center of bbox:", bbox.box.center());
-			var target = new THREE.Vector3(0,0,bbox.box.center().z);
+            console.log("bbox:", box);
+			console.log("center of bbox:", box.center());
+			var target = new THREE.Vector3(0, 0, box.center().z);
 			this.controls.target = target;
+            
 			// camera.updateProjectionMatrix();
 			this.controls.update();
 			console.log("trackball camera after tweak:", camera);
